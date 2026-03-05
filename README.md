@@ -31,7 +31,7 @@
 - **Frontend**: React.js, Vanilla CSS, Web Speech API (if applicable)
 - **Backend**: Node.js, Express.js
 - **AI & Speech**: Microsoft Azure Cognitive Services (Speech SDK), OpenAI Whisper (via whisper-node)
-- **Audio Processing**: FFmpeg
+- **Audio Processing**: FFmpeg, fluent-ffmpeg
 
 ### 🚀 Getting Started
 
@@ -107,7 +107,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **前端框架**：React.js, Vanilla CSS
 - **后端服务**：Node.js, Express.js
 - **AI 赋能**：Microsoft Azure Cognitive Services (Speech SDK), OpenAI Whisper (通过 whisper-node)
-- **音频处理**：FFmpeg
+- **音频处理**：FFmpeg, fluent-ffmpeg
 
 ### 🚀 快速开始
 

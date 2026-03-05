@@ -1,4 +1,5 @@
 import React from 'react';
+import './DiffHistory.css';
 
 const DiffHistory = ({ history, audioFileName, onExport }) => {
     const handleExport = () => {

@@ -1,10 +1,10 @@
 import './App.css';
-import AudioControls from './components/AudioControls';
-import Transcripts from './components/Transcripts';
-import DiffCom from './components/DiffCom';
-import ProgressBar from './components/ProgressBar';
-import DiffHistory from './components/DiffHistory';
-import WordSidebar from './components/WordSidebar';
+import AudioControls from './components/AudioControls/AudioControls';
+import Transcripts from './components/Transcripts/Transcripts';
+import DiffCom from './components/DiffCom/DiffCom';
+import ProgressBar from './components/ProgressBar/ProgressBar';
+import DiffHistory from './components/DiffHistory/DiffHistory';
+import WordSidebar from './components/WordSidebar/WordSidebar';
 import { useState, useRef } from 'react';
 
 function App() {

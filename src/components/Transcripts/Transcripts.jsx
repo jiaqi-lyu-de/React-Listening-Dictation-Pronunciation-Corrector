@@ -1,4 +1,5 @@
 import React from 'react';
+import './Transcripts.css';
 
 const Transcripts = ({ text, currentNumber, onSentenceClick }) => {
   if (!text || text.length === 0) {

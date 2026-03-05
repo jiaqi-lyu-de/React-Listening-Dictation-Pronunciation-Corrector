@@ -1,0 +1,194 @@
+/* Diff History Component */
+.diff-history-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    margin-top: 2rem;
+    animation: slideUp 0.5s ease;
+}
+
+.diff-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.diff-history-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.diff-history-title {
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.diff-history-count {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.diff-history-avg {
+    margin: 0;
+}
+
+.export-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    box-shadow: var(--shadow-md);
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.export-btn:active {
+    transform: translateY(0);
+}
+
+.diff-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar for History */
+.diff-history-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.diff-history-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 100px;
+}
+
+.diff-history-list::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 100px;
+}
+
+.diff-history-list::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}
+
+.diff-history-item {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    transition: all var(--transition-normal);
+}
+
+.diff-history-item:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateX(3px);
+}
+
+.diff-history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.diff-history-sentence-num {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.diff-history-texts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.diff-history-text-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+}
+
+.diff-history-label {
+    color: var(--text-tertiary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    min-width: 80px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.diff-history-content {
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    flex: 1;
+}
+
+.diff-history-timestamp {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    font-style: italic;
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .diff-history-container {
+        padding: 1.5rem;
+    }
+
+    .diff-history-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .export-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .diff-history-text-row {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .diff-history-label {
+        min-width: auto;
+    }
+}

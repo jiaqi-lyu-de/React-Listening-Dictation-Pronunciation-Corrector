@@ -1,0 +1,104 @@
+/* Transcripts */
+.transcripts-container {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-md);
+    animation: slideUp 0.6s ease;
+}
+
+.transcripts-title {
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.transcripts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar */
+.transcripts-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.transcripts-list::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 100px;
+}
+
+.transcripts-list::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 100px;
+}
+
+.transcripts-list::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-secondary);
+}
+
+.transcript-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    align-items: flex-start;
+}
+
+.transcript-item:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-primary);
+    transform: translateX(5px);
+}
+
+.transcript-item.active {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.transcript-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-gradient);
+    color: white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.transcript-item.active .transcript-number {
+    animation: pulse 2s infinite;
+}
+
+.transcript-text {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.transcripts-empty {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-tertiary);
+    font-style: italic;
+}

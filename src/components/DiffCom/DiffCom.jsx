@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import SpeechRecorder from './SpeechRecorder';
-import useRecorder from '../utils/useRecorder';
-import { fetchAPI } from '../utils/fetch';
+import SpeechRecorder from '../SpeechRecorder/SpeechRecorder';
+import useRecorder from '../../utils/useRecorder';
+import './DiffCom.css';
 import { diffWords } from 'diff';
 
 const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {

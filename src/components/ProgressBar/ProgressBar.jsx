@@ -1,4 +1,5 @@
 import React from 'react';
+import './ProgressBar.css';
 
 const ProgressBar = ({ current, total, accuracy }) => {
     const progress = total > 0 ? ((current + 1) / total) * 100 : 0;

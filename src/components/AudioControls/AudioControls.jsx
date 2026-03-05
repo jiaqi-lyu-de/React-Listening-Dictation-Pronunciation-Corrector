@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { fetchAPI } from '../utils/fetch';
-import HistorySelector from './HistorySelector';
+import { fetchAPI } from '../../utils/fetch';
+import HistorySelector from '../HistorySelector/HistorySelector';
+import './AudioControls.css';
 
 const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioNameChange }) => {
   const [loading, setLoading] = useState(false);
@@ -95,14 +96,14 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
     }
   };
 
-  const togglePlay = () => {
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
+  // const togglePlay = () => {
+  //   if (isPlaying) {
+  //     audioRef.current.pause();
+  //   } else {
+  //     audioRef.current.play();
+  //   }
+  //   setIsPlaying(!isPlaying);
+  // };
 
   const replaySentence = () => {
     const startTimeStr = text?.transcript?.[number]?.start;

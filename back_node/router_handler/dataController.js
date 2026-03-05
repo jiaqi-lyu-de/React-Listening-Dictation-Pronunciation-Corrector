@@ -19,10 +19,6 @@ exports.saveWords = (req, res) => {
 
         const currentData = JSON.parse(fs.readFileSync(WORDS_FILE, 'utf8'));
 
-        // Merge and deduplicate
-        // Assuming words are objects { word: "abc", context: "..." } or just strings
-        // Let's assume simple strings for deduplication or handle objects
-
         let updatedData = [...currentData];
         newWords.forEach(nw => {
             // Check for duplicate based on 'word' property if object, or direct value if string

@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import useRecorder from '../utils/useRecorder';
+import useRecorder from '../../utils/useRecorder';
+import './SpeechRecorder.css';
 
 const SpeechRecorder = ({ referenceText, onAssessmentResult, onError }) => {
     const { isRecording, startRecording: startRedcordingHook, stopRecording: stopRecordingHook } = useRecorder();

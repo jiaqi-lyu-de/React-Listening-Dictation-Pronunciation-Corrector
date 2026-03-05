@@ -1,11 +1,9 @@
 
 const whisperModule = require('whisper-node');
 const whisper = whisperModule.default || whisperModule.whisper;
-const { exec } = require('child_process');
-const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
-const execAsync = promisify(exec);
+const ffmpeg = require('fluent-ffmpeg');
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -24,7 +22,14 @@ exports.toText = async (req, res) => {
         // 2. Convert MP3 to WAV (16kHz mono)
         // whisper-node is strict about 16000Hz sampling rate
         console.log(`Converting uploaded file ${req.file.originalname} to WAV...`);
-        await execAsync(`ffmpeg -i "${inputFile}" -ar 16000 -ac 1 "${outputFile}" -y`);
+        await new Promise((resolve, reject) => {
+            ffmpeg(inputFile)
+                .audioFrequency(16000)
+                .audioChannels(1)
+                .on('end', resolve)
+                .on('error', reject)
+                .save(outputFile);
+        });
 
         // 3. Whisper Options
         const options = {
