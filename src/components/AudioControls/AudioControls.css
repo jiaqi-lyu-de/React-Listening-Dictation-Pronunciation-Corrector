@@ -1,4 +1,3 @@
-/* Audio Controls */
 .audio-controls-container {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -85,14 +84,14 @@
     animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-    0% {
+@keyframes spin {0% {
         transform: rotate(0deg);
     }
 
-    100% {
+100% {
         transform: rotate(360deg);
     }
+
 }
 
 .audio-player {
@@ -159,3 +158,5 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+

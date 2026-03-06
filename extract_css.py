@@ -1,4 +1,4 @@
-import re
+# extract css from App.css to component css files
 
 with open('src/App.css', 'r') as f:
     content = f.read()
@@ -7,10 +7,7 @@ def extract_section(start_comment, end_comment=None):
     if end_comment:
         pattern = r'(/\* ' + start_comment + r' \*/.*?)(?=/\* ' + end_comment + r' \*/)'
     else:
-        # Last section or specific logic, but wait, we can just split by comments.
         pass
-
-# It's better to just slice by strings because the format is very predictable.
 
 sections = [
     ('AudioControls', '/* Audio Controls */', '/* Progress Bar */'),

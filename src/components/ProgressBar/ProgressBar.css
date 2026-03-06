@@ -1,4 +1,3 @@
-/* Progress Bar */
 .progress-container {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -100,3 +99,5 @@
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
+
+

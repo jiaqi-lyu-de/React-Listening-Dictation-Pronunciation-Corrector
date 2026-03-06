@@ -70,9 +70,10 @@
     color: #888;
 }
 
-.history-loading,
-.history-empty {
+.history-loading, .history-empty {
     padding: 20px;
     text-align: center;
     color: #888;
 }
+
+

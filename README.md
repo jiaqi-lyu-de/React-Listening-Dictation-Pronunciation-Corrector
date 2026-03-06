@@ -38,7 +38,6 @@
 #### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v16 or higher recommended)
-- [FFmpeg](https://ffmpeg.org/download.html) installed and added to your system environment variables.
 - An **Azure Speech Service** subscription key.
 
 #### 1. Environment Configuration
@@ -114,7 +113,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 #### 前置要求
 
 - [Node.js](https://nodejs.org/) (建议版本 v16 及以上)
-- 必须安装 [FFmpeg](https://ffmpeg.org/download.html) 并将其添加到系统环境变量中（用于音频格式转换）。
 - 一个有效的 **Azure Speech Service** 密钥。
 
 #### 1. 环境变量配置
