@@ -49,24 +49,27 @@ AZURE_SPEECH_KEY=your_azure_speech_key_here
 AZURE_SPEECH_REGION=your_azure_region_here
 ```
 
-#### 2. Backend Setup
+#### 2. Dependencies Setup
 
 ```bash
+# Install frontend dependencies (root directory)
+npm install
+
+# Install backend dependencies
 cd back_node
 npm install
-npm start
+cd ..
 ```
-The backend server will run at `http://localhost:8888`.
 
-#### 3. Frontend Setup
+#### 3. Run the Application
 
-Open a new terminal and navigate to the project root directory:
+From the root directory, run:
 
 ```bash
-npm install
-npm start
+npm run dev
 ```
-The frontend application will run at `http://localhost:3000`.
+
+The frontend will run at `http://localhost:3000` and the backend at `http://localhost:8888`.
 
 ### 📂 Project Structure
 
@@ -124,24 +127,27 @@ AZURE_SPEECH_KEY=你的Azure核心密钥
 AZURE_SPEECH_REGION=你的Azure区域 (例如 eastus)
 ```
 
-#### 2. 启动后端服务
+#### 2. 安装依赖
 
 ```bash
+# 安装前端依赖（根目录）
+npm install
+
+# 安装后端依赖
 cd back_node
 npm install
-npm start
+cd ..
 ```
-后端服务启动后，将运行在 `http://localhost:8888`。
 
-#### 3. 启动前端页面
+#### 3. 启动应用
 
-打开一个新的终端窗口，回到项目根目录：
+在项目根目录下运行：
 
 ```bash
-npm install
-npm start
+npm run dev
 ```
-前端应用启动后，将自动在浏览器中打开 `http://localhost:3000`。
+
+前端将运行在 `http://localhost:3000`，后端运行在 `http://localhost:8888`。
 
 ### 📂 项目结构
 

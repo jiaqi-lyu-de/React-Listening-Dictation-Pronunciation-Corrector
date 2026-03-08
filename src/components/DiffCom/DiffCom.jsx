@@ -418,18 +418,28 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
         <h3 className="diff-title">Real-time Comparison</h3>
         <div className="diff-output">
           {diff.length > 0 ? (
-            diff.map((part, index) => {
-              // Identify the class based on diff properties
-              let className = "diff-unchanged";
-              if (part.added) className = "diff-added";
-              if (part.removed) className = "diff-removed";
-
-              return (
-                <span key={index} className={className}>
-                  {part.value}
-                </span>
-              );
-            })
+            <div className="diff-split">
+              <div className="diff-expected">
+                <div className="diff-label">Expected (Original)</div>
+                <div className="diff-text">
+                  {diff.filter(p => !p.added).map((part, index) => (
+                    <span key={`exp-${index}`} className={part.removed ? "diff-missing" : "diff-unchanged"}>
+                      {part.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="diff-actual">
+                <div className="diff-label">Your Input</div>
+                <div className="diff-text">
+                  {diff.filter(p => !p.removed).map((part, index) => (
+                    <span key={`act-${index}`} className={part.added ? "diff-error" : "diff-unchanged"}>
+                      {part.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
             <span className="diff-placeholder">Start typing to see comparison...</span>
           )}
