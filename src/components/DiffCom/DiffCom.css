@@ -14,11 +14,15 @@
     gap: 1.5rem;
 }
 
-.input-section, .diff-section, .original-text {
+.input-section,
+.diff-section,
+.original-text {
     animation: fadeIn 0.4s ease;
 }
 
-.input-title, .diff-title, .original-title {
+.input-title,
+.diff-title,
+.original-title {
     color: var(--text-secondary);
     font-size: 1rem;
     font-weight: 600;
@@ -81,24 +85,11 @@
     border: 1px solid var(--warning);
 }
 
-.original-text {
-    padding: 1.25rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    border-left: 4px solid var(--accent-primary);
-}
-
-.original-content {
-    color: var(--text-primary);
-    font-size: 1.125rem;
-    line-height: 1.8;
-    margin-top: 0.5rem;
-}
-
 .diff-output {
     padding: 1.25rem;
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
+    border-left: 4px solid var(--accent-primary);
     font-size: 1.125rem;
     line-height: 1.8;
     min-height: 60px;
@@ -119,7 +110,8 @@
     width: 100%;
 }
 
-.diff-expected, .diff-actual {
+.diff-expected,
+.diff-actual {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -355,7 +347,8 @@ kbd {
     color: var(--error);
 }
 
-.word-group, .word-details {
+.word-group,
+.word-details {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -440,26 +433,28 @@ kbd {
     line-height: 1.6;
 }
 
-@media (max-width: 768px) {.score-grid {
+@media (max-width: 768px) {
+    .score-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
-.record-button {
+    .record-button {
         padding: 0.875rem 1.5rem;
         font-size: 1rem;
     }
 
 }
 
-@media (max-width: 480px) {.score-grid {
+@media (max-width: 480px) {
+    .score-grid {
         grid-template-columns: 1fr;
     }
 
-.word-list {
+    .word-list {
         padding: 0.75rem;
     }
 
-.word-item {
+    .word-item {
         padding: 0.375rem 0.625rem;
         font-size: 0.875rem;
     }
@@ -472,15 +467,16 @@ kbd {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
-@keyframes recordingPulseWord {0% {
+@keyframes recordingPulseWord {
+    0% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
     }
 
-70% {
+    70% {
         box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
     }
 
-100% {
+    100% {
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
 
@@ -508,5 +504,3 @@ kbd {
     font-weight: 600;
     padding: 0 0.2rem;
 }
-
-

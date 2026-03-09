@@ -1,13 +1,23 @@
-
 const whisperModule = require('whisper-node');
 const whisper = whisperModule.default || whisperModule.whisper;
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const { exec } = require('child_process');
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 exports.uploadMiddleware = upload.single('audio');
+
+// Time formatter helper for converting seconds to HH:MM:SS.mmm
+const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    const ms = Math.floor((seconds % 1) * 1000);
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+};
+
 
 exports.toText = async (req, res) => {
     // 1. Check if file exists in request
@@ -31,19 +41,50 @@ exports.toText = async (req, res) => {
                 .save(outputFile);
         });
 
-        // 3. Whisper Options
-        const options = {
-            modelName: "base.en",
-            whisperOptions: {
-                language: 'en',
-                gen_file_txt: false,
-                gen_file_subtitle: false,
-                word_timestamps: false
-            },
-        };
+        // 3. Choose Transcription Method
+        const method = req.body.method || 'whisper-node';
+        let transcript = [];
 
-        // 4. Run Transcription
-        const transcript = await whisper(outputFile, options);
+        if (method === 'whisperx') {
+            console.log(`Running whisperx on ${outputFile}...`);
+            const outputDir = path.dirname(outputFile);
+            await new Promise((resolve, reject) => {
+                exec(`TORCH_FORCE_WEIGHTS_ONLY_LOAD=0 python3 -m whisperx "${outputFile}" --output_format json --compute_type int8 --model small --output_dir "${outputDir}"`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error('whisperx error:', error, stderr);
+                        return reject(error);
+                    }
+                    resolve(stdout);
+                });
+            });
+
+            const parsedPath = path.parse(outputFile);
+            const jsonFile = path.join(parsedPath.dir, parsedPath.name + '.json');
+
+            if (fs.existsSync(jsonFile)) {
+                const data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
+                transcript = data.segments.map(s => ({
+                    start: formatTime(s.start),
+                    end: formatTime(s.end),
+                    speech: s.text.trim()
+                }));
+                fs.unlinkSync(jsonFile); // cleanup
+            } else {
+                throw new Error('whisperx output JSON file not found');
+            }
+        } else {
+            // whisper-node fallback
+            const options = {
+                modelName: "base.en",
+                whisperOptions: {
+                    language: 'en',
+                    gen_file_txt: false,
+                    gen_file_subtitle: false,
+                    word_timestamps: false
+                },
+            };
+            transcript = await whisper(outputFile, options);
+        }
 
         if (!transcript || transcript.length === 0) {
             throw new Error('Transcription returned empty result');

@@ -288,12 +288,38 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
         )}
       </div>
 
-      {isChecked && (
-        <div className="original-text">
-          <h3 className="original-title">Original Text</h3>
-          <p className="original-content">{originalText}</p>
+      {/* Render the diff directly as JSX */}
+      {isChecked && <div className="diff-section">
+        <h3 className="diff-title">Real-time Comparison</h3>
+        <div className="diff-output">
+          {diff.length > 0 ? (
+            <div className="diff-split">
+              <div className="diff-expected">
+                <div className="diff-label">Expected (Original)</div>
+                <div className="diff-text">
+                  {diff.filter(p => !p.added).map((part, index) => (
+                    <span key={`exp-${index}`} className={part.removed ? "diff-missing" : "diff-unchanged"}>
+                      {part.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="diff-actual">
+                <div className="diff-label">Your Input</div>
+                <div className="diff-text">
+                  {diff.filter(p => !p.removed).map((part, index) => (
+                    <span key={`act-${index}`} className={part.added ? "diff-error" : "diff-unchanged"}>
+                      {part.value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <span className="diff-placeholder">Start typing to see comparison...</span>
+          )}
         </div>
-      )}
+      </div>}
 
       <SpeechRecorder
         referenceText={originalText}
@@ -413,43 +439,13 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
         </div>
       )}
 
-      {/* Render the diff directly as JSX */}
-      {isChecked && <div className="diff-section">
-        <h3 className="diff-title">Real-time Comparison</h3>
-        <div className="diff-output">
-          {diff.length > 0 ? (
-            <div className="diff-split">
-              <div className="diff-expected">
-                <div className="diff-label">Expected (Original)</div>
-                <div className="diff-text">
-                  {diff.filter(p => !p.added).map((part, index) => (
-                    <span key={`exp-${index}`} className={part.removed ? "diff-missing" : "diff-unchanged"}>
-                      {part.value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="diff-actual">
-                <div className="diff-label">Your Input</div>
-                <div className="diff-text">
-                  {diff.filter(p => !p.removed).map((part, index) => (
-                    <span key={`act-${index}`} className={part.added ? "diff-error" : "diff-unchanged"}>
-                      {part.value}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <span className="diff-placeholder">Start typing to see comparison...</span>
-          )}
-        </div>
-      </div>}
-
       <div className="keyboard-hints">
         <span className="hint"><kbd>Tab</kbd> Replay</span>
         <span className="hint"><kbd>Enter</kbd> Next</span>
         <span className="hint"><kbd>Cmd+Enter</kbd> Check</span>
+        <span className="hint"><kbd>Cmd+B</kbd> save word</span>
+        <span className="hint"><kbd>Double Click</kbd> read word</span>
+        <span className="hint"><kbd>Right Click</kbd> replay word</span>
       </div>
     </div>
   );

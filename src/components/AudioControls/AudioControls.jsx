@@ -8,6 +8,7 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   const [audioUrl, setAudioUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
+  const [transcriptionMethod, setTranscriptionMethod] = useState("whisper-node");
   const audioRef = useRef(null);
 
   const handleHistorySelect = ({ text, audioUrl, fileName }) => {
@@ -83,6 +84,7 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
 
     try {
       const formData = new FormData();
+      formData.append('method', transcriptionMethod);
       formData.append('audio', file);
       const response = await fetchAPI('transcribe', 'POST', { body: formData });
       handleText(response);
@@ -156,6 +158,30 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
               style={{ display: 'none' }}
               disabled={loading}
             />
+            <div className="method-selector">
+              <label>
+                <input
+                  type="radio"
+                  name="method"
+                  value="whisper-node"
+                  checked={transcriptionMethod === 'whisper-node'}
+                  onChange={() => setTranscriptionMethod('whisper-node')}
+                  disabled={loading}
+                />
+                whisper-node  (By default, only based on pauses)
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="method"
+                  value="whisperx"
+                  checked={transcriptionMethod === 'whisperx'}
+                  onChange={() => setTranscriptionMethod('whisperx')}
+                  disabled={loading}
+                />
+                whisperx (More accurate segmentation, processed by Python)
+              </label>
+            </div>
           </>
         )}
         {error && <div className="error-message">{error}</div>}
