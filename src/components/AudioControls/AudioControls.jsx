@@ -9,6 +9,7 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
   const [transcriptionMethod, setTranscriptionMethod] = useState("whisper-node");
+  const [isFullPlaying, setIsFullPlaying] = useState(false);
   const audioRef = useRef(null);
 
   const handleHistorySelect = ({ text, audioUrl, fileName }) => {
@@ -35,30 +36,49 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   // 核心功能：监听时间更新
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
-    const currentLine = text?.transcript?.[number];
+    if (!audio || !text?.transcript) return;
 
-    if (audio && currentLine?.end) {
-      const endTime = timeToSeconds(currentLine.end);
+    if (isFullPlaying) {
+      const currentTime = audio.currentTime;
+      let newNumber = number;
+      for (let i = 0; i < text.transcript.length; i++) {
+        const start = timeToSeconds(text.transcript[i].start);
+        const end = timeToSeconds(text.transcript[i].end);
+        if (currentTime >= start && currentTime <= end) {
+          newNumber = i;
+          break;
+        }
+      }
+      if (newNumber !== number) {
+        handleNum(newNumber);
+      }
+    } else {
+      const currentLine = text.transcript[number];
+      if (currentLine?.end) {
+        const endTime = timeToSeconds(currentLine.end);
 
-      // 如果当前播放时间超过了句子的结束时间
-      if (audio.currentTime >= endTime) {
-        audio.pause();
-        setIsPlaying(false);
-        audio.currentTime = endTime;
+        // 如果当前播放时间超过了句子的结束时间
+        if (audio.currentTime >= endTime) {
+          audio.pause();
+          setIsPlaying(false);
+          audio.currentTime = endTime;
+        }
       }
     }
   };
 
   // 当切换句子序号时，跳转到开始时间并自动播放（可选）
   useEffect(() => {
-    const startTimeStr = text?.transcript?.[number]?.start;
-    if (startTimeStr && audioRef.current) {
-      const startTime = timeToSeconds(startTimeStr);
-      audioRef.current.currentTime = startTime;
+    const currentLine = text?.transcript?.[number];
+    if (currentLine?.start && audioRef.current) {
+      const startTime = timeToSeconds(currentLine.start);
+      const endTime = timeToSeconds(currentLine.end);
+      const currentTime = audioRef.current.currentTime;
 
-      // 如果希望切换句子后自动播放这一段，取消下面注释：
-      // audioRef.current.play();
-      // setIsPlaying(true);
+      // If the current audio time is not within the sentence boundaries, jump to start
+      if (currentTime < startTime || currentTime > endTime) {
+        audioRef.current.currentTime = startTime;
+      }
     }
   }, [number, text]);
 
@@ -107,7 +127,16 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   //   setIsPlaying(!isPlaying);
   // };
 
+  const playFull = () => {
+    setIsFullPlaying(true);
+    if (audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
   const replaySentence = () => {
+    setIsFullPlaying(false);
     const startTimeStr = text?.transcript?.[number]?.start;
     if (startTimeStr && audioRef.current) {
       const startTime = timeToSeconds(startTimeStr);
@@ -118,12 +147,14 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   };
 
   const handlePrevious = () => {
+    setIsFullPlaying(false);
     if (number > 0) {
       handleNum(number - 1);
     }
   };
 
   const handleNext = () => {
+    setIsFullPlaying(false);
     const totalSentences = text?.transcript?.length || 0;
     if (number < totalSentences - 1) {
       handleNum(number + 1);
@@ -221,6 +252,12 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
               onClick={replaySentence}
             >
               🔁 Replay Current
+            </button>
+            <button
+              className="control-btn primary"
+              onClick={playFull}
+            >
+              🎧 Full Mode
             </button>
             <button
               className="control-btn secondary"
