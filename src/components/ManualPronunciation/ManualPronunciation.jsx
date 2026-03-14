@@ -32,16 +32,53 @@ const ManualPronunciation = () => {
     };
 
     // Handle text selection
+    // Handle text selection and snap to word boundaries
     const handleSelection = () => {
         const selection = window.getSelection();
         if (selection && selection.toString().trim()) {
             // Get selected text and ensure it's within our display area
             if (displayRef.current && displayRef.current.contains(selection.anchorNode)) {
-                setSelectedText(selection.toString().trim());
+                try {
+                    const range = selection.getRangeAt(0);
+                    const container = range.commonAncestorContainer;
+
+                    // We only want to snap if we're dealing with text nodes
+                    // If the user selected across different elements, we might skip snapping for simplicity
+                    // but here it's mostly a single div with text.
+
+                    // Expand start to the beginning of the word
+                    let startNode = range.startContainer;
+                    let startOffset = range.startOffset;
+
+                    if (startNode.nodeType === Node.TEXT_NODE) {
+                        while (startOffset > 0 && !/\s/.test(startNode.textContent.charAt(startOffset - 1))) {
+                            startOffset--;
+                        }
+                        range.setStart(startNode, startOffset);
+                    }
+
+                    // Expand end to the end of the word
+                    let endNode = range.endContainer;
+                    let endOffset = range.endOffset;
+
+                    if (endNode.nodeType === Node.TEXT_NODE) {
+                        while (endOffset < endNode.textContent.length && !/\s/.test(endNode.textContent.charAt(endOffset))) {
+                            endOffset++;
+                        }
+                        range.setEnd(endNode, endOffset);
+                    }
+
+                    // Avoid triggering another selectionchange if possible, 
+                    // but browsers are usually smart enough or we'll just handle one extra call
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+
+                    setSelectedText(selection.toString().trim());
+                } catch (e) {
+                    // Fallback to basic selection if snapping fails
+                    setSelectedText(selection.toString().trim());
+                }
             }
-        } else {
-            // Only clear if they click without selecting
-            //  setSelectedText(''); 
         }
     };
 

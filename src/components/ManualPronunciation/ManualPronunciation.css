@@ -107,6 +107,7 @@
     /* Allow selection */
     min-height: 80px;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    white-space: pre-wrap;
 }
 
 .text-display-area::selection {
