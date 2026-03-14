@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    
+
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
     --bg-tertiary: #f1f5f9;
@@ -105,6 +105,36 @@ body::before {
     padding: 0 1.5rem;
 }
 
+.mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.7s ease;
+}
+
+.toggle-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+}
+
+.toggle-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.toggle-btn.active {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
 .main-content {
     display: flex;
     flex-direction: column;
@@ -112,150 +142,170 @@ body::before {
     animation: fadeIn 0.8s ease;
 }
 
-@keyframes fadeIn {from {
+@keyframes fadeIn {
+    from {
         opacity: 0;
     }
 
-to {
+    to {
         opacity: 1;
     }
 
 }
 
-@keyframes fadeInDown {from {
+@keyframes fadeInDown {
+    from {
         opacity: 0;
         transform: translateY(-20px);
     }
 
-to {
+    to {
         opacity: 1;
         transform: translateY(0);
     }
 
 }
 
-@keyframes fadeInUp {from {
+@keyframes fadeInUp {
+    from {
         opacity: 0;
         transform: translateY(20px);
     }
 
-to {
+    to {
         opacity: 1;
         transform: translateY(0);
     }
 
 }
 
-@keyframes slideUp {from {
+@keyframes slideUp {
+    from {
         opacity: 0;
         transform: translateY(30px);
     }
 
-to {
+    to {
         opacity: 1;
         transform: translateY(0);
     }
 
 }
 
-@keyframes popIn {0% {
+@keyframes popIn {
+    0% {
         opacity: 0;
         transform: scale(0.8);
     }
 
-50% {
+    50% {
         transform: scale(1.05);
     }
 
-100% {
+    100% {
         opacity: 1;
         transform: scale(1);
     }
 
 }
 
-@keyframes bounce {0%, 100% {
+@keyframes bounce {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
 
-50% {
+    50% {
         transform: translateY(-10px);
     }
 
 }
 
-@keyframes pulse {0%, 100% {
+@keyframes pulse {
+
+    0%,
+    100% {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
     }
 
-50% {
+    50% {
         transform: scale(1.1);
         box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
     }
 
 }
 
-@media (max-width: 768px) {.app-header {
+@media (max-width: 768px) {
+    .app-header {
         padding: 2rem 1rem 1.5rem;
     }
 
-.app-container {
+    .app-container {
         padding: 0 1rem;
     }
 
-.main-content {
+    .main-content {
         gap: 1.5rem;
     }
 
-.audio-controls-container, .diff-container, .transcripts-container, .progress-container {
+    .audio-controls-container,
+    .diff-container,
+    .transcripts-container,
+    .progress-container {
         padding: 1.5rem;
     }
 
-.playback-controls {
+    .playback-controls {
         flex-direction: column;
     }
 
-.control-btn {
+    .control-btn {
         width: 100%;
         justify-content: center;
     }
 
-.progress-header {
+    .progress-header {
         flex-direction: column;
         align-items: flex-start;
     }
 
-.progress-accuracy {
+    .progress-accuracy {
         align-items: flex-start;
     }
 
-.keyboard-hints {
+    .keyboard-hints {
         justify-content: center;
     }
 
-.transcripts-list {
+    .transcripts-list {
         max-height: 350px;
     }
 
 }
 
-@media (max-width: 480px) {.app-title {
+@media (max-width: 480px) {
+    .app-title {
         font-size: 2rem;
     }
 
-.app-subtitle {
+    .app-subtitle {
         font-size: 1rem;
     }
 
-.audio-controls-container, .diff-container, .transcripts-container, .progress-container {
+    .audio-controls-container,
+    .diff-container,
+    .transcripts-container,
+    .progress-container {
         padding: 1.25rem;
     }
 
-.input-field, .diff-output, .original-content, .transcript-text {
+    .input-field,
+    .diff-output,
+    .original-content,
+    .transcript-text {
         font-size: 1rem;
     }
 
 }
-
-

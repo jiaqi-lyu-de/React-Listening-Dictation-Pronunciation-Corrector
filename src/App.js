@@ -5,6 +5,7 @@ import DiffCom from './components/DiffCom/DiffCom';
 import ProgressBar from './components/ProgressBar/ProgressBar';
 import DiffHistory from './components/DiffHistory/DiffHistory';
 import WordSidebar from './components/WordSidebar/WordSidebar';
+import ManualPronunciation from './components/ManualPronunciation/ManualPronunciation';
 import { useState, useRef } from 'react';
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   const [overallAccuracy, setOverallAccuracy] = useState(null);
   const [diffHistory, setDiffHistory] = useState([]);
   const [audioFileName, setAudioFileName] = useState('');
+  const [appMode, setAppMode] = useState('dictation');
   const replayRef = useRef(null);
 
   const handleText = (text) => {
@@ -79,48 +81,69 @@ function App() {
       </div>
 
       <div className="app-container">
+        <div className="mode-toggle">
+          <button
+            className={`toggle-btn ${appMode === 'dictation' ? 'active' : ''}`}
+            onClick={() => setAppMode('dictation')}
+          >
+            Dictation Practice
+          </button>
+          <button
+            className={`toggle-btn ${appMode === 'manual' ? 'active' : ''}`}
+            onClick={() => setAppMode('manual')}
+          >
+            Manual Pronunciation
+          </button>
+        </div>
+
         <div className="main-content">
-          <AudioControls
-            handleText={handleText}
-            number={number}
-            handleNum={handleNum}
-            text={text}
-            onReplay={replayRef}
-            onAudioNameChange={handleAudioNameChange}
-          />
-
-          {text && totalSentences > 0 && (
+          {appMode === 'dictation' ? (
             <>
-              <ProgressBar
-                current={number}
-                total={totalSentences}
-                accuracy={overallAccuracy}
+              <AudioControls
+                handleText={handleText}
+                number={number}
+                handleNum={handleNum}
+                text={text}
+                onReplay={replayRef}
+                onAudioNameChange={handleAudioNameChange}
               />
 
-              <div className="practice-section">
-                <DiffCom
-                  text={text}
-                  number={number}
-                  onNext={handleNext}
-                  onCheck={handleReplay}
-                  onReplayAudio={handleReplayAudio}
-                />
-              </div>
+              {text && totalSentences > 0 && (
+                <>
+                  <ProgressBar
+                    current={number}
+                    total={totalSentences}
+                    accuracy={overallAccuracy}
+                  />
 
-              <DiffHistory
-                history={diffHistory}
-                audioFileName={audioFileName}
-              />
+                  <div className="practice-section">
+                    <DiffCom
+                      text={text}
+                      number={number}
+                      onNext={handleNext}
+                      onCheck={handleReplay}
+                      onReplayAudio={handleReplayAudio}
+                    />
+                  </div>
 
-              <Transcripts
-                text={text?.transcript}
-                currentNumber={number}
-                onSentenceClick={handleSentenceClick}
-              />
+                  <DiffHistory
+                    history={diffHistory}
+                    audioFileName={audioFileName}
+                  />
+
+                  <Transcripts
+                    text={text?.transcript}
+                    currentNumber={number}
+                    onSentenceClick={handleSentenceClick}
+                  />
+                </>
+              )}
+
+              <WordSidebar />
             </>
+          ) : (
+            <ManualPronunciation />
           )}
-
-          <WordSidebar />
         </div>
       </div>
     </div>
