@@ -168,29 +168,28 @@
     text-align: right;
 }
 
-@media (max-width: 768px) {.diff-history-container {
+@media (max-width: 768px) {
+    .diff-history-container {
         padding: 1.5rem;
     }
 
-.diff-history-header {
+    .diff-history-header {
         flex-direction: column;
         align-items: flex-start;
     }
 
-.export-btn {
+    .export-btn {
         width: 100%;
         justify-content: center;
     }
 
-.diff-history-text-row {
+    .diff-history-text-row {
         flex-direction: column;
         gap: 0.25rem;
     }
 
-.diff-history-label {
+    .diff-history-label {
         min-width: auto;
     }
 
 }
-
-

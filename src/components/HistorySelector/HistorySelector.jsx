@@ -60,9 +60,9 @@ const HistorySelector = ({ onSelect }) => {
             {isOpen && (
                 <div className="history-dropdown">
                     {loading ? (
-                        <div className="history-loading">Loading...</div>
+                        <div className="history-loading">⏳ Loading history...</div>
                     ) : historyFiles.length === 0 ? (
-                        <div className="history-empty">No history found</div>
+                        <div className="history-empty">📭 No history found</div>
                     ) : (
                         <ul className="history-list">
                             {historyFiles.map(file => (
