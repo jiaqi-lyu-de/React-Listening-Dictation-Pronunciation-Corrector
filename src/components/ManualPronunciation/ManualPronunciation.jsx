@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import SpeechRecorder from '../SpeechRecorder/SpeechRecorder';
+import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
 import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import './ManualPronunciation.css';
 
@@ -145,7 +145,7 @@ const ManualPronunciation = () => {
                     </div>
 
                     <div className="recorder-section">
-                        <SpeechRecorder
+                        <SpeechAssessor
                             referenceText={selectedText || displayText} // fallback to full text
                             onAssessmentResult={handlePronunciationResult}
                             onError={handlePronunciationError}

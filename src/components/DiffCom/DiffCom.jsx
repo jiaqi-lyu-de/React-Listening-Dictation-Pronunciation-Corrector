@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import SpeechRecorder from '../SpeechRecorder/SpeechRecorder';
+import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
 import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import './DiffCom.css';
 import { diffWords } from 'diff';
@@ -178,7 +178,7 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
         </div>
       </div>}
 
-      <SpeechRecorder
+      <SpeechAssessor
         referenceText={originalText}
         onAssessmentResult={handlePronunciationResult}
         onError={handlePronunciationError}

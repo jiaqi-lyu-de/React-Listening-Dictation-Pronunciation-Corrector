@@ -6,6 +6,7 @@ import ProgressBar from './components/ProgressBar/ProgressBar';
 import DiffHistory from './components/DiffHistory/DiffHistory';
 import WordSidebar from './components/WordSidebar/WordSidebar';
 import ManualPronunciation from './components/ManualPronunciation/ManualPronunciation';
+import WordReading from './components/WordReading/WordReading';
 import { useState, useRef } from 'react';
 
 function App() {
@@ -19,9 +20,9 @@ function App() {
 
   const handleText = (text) => {
     setText(text);
-    setNumber(0); // Reset to first sentence when new audio is uploaded
+    setNumber(0);
     setOverallAccuracy(null);
-    setDiffHistory([]); // Clear history when new audio is uploaded
+    setDiffHistory([]);
   };
 
   const handleNum = (num) => {
@@ -39,21 +40,17 @@ function App() {
   };
 
   const handleReplay = (diffData) => {
-    // If diffData is provided, save it to history
     if (diffData && typeof diffData === 'object') {
       setDiffHistory(prevHistory => {
-        // Check if entry for this sentence already exists
         const existingIndex = prevHistory.findIndex(
           item => item.sentenceNumber === diffData.sentenceNumber
         );
 
         if (existingIndex >= 0) {
-          // Update existing entry (keep latest)
           const newHistory = [...prevHistory];
           newHistory[existingIndex] = diffData;
           return newHistory;
         } else {
-          // Add new entry
           return [...prevHistory, diffData];
         }
       });
@@ -61,7 +58,6 @@ function App() {
   };
 
   const handleReplayAudio = () => {
-    // Just replay audio
     if (replayRef.current) {
       replayRef.current();
     }
@@ -73,31 +69,35 @@ function App() {
 
   const totalSentences = text?.transcript?.length || 0;
 
+  const modes = [
+    { key: 'dictation', label: '语音转复读', icon: '🎧', desc: 'Dictation' },
+    { key: 'sentence', label: '句子阅读', icon: '📖', desc: 'Sentence Reading' },
+    { key: 'word', label: '单词阅读', icon: '📝', desc: 'Word Reading' },
+  ];
+
   return (
     <div className="App">
       <div className="app-header">
-        <h1 className="app-title">🎧 Listening Practice</h1>
-        <p className="app-subtitle">Improve your listening skills with real-time feedback</p>
+        <h1 className="app-title">🎧 Listening & Pronunciation</h1>
+        <p className="app-subtitle">Improve your skills with real-time feedback</p>
       </div>
 
       <div className="app-container">
         <div className="mode-toggle">
-          <button
-            className={`toggle-btn ${appMode === 'dictation' ? 'active' : ''}`}
-            onClick={() => setAppMode('dictation')}
-          >
-            Dictation Practice
-          </button>
-          <button
-            className={`toggle-btn ${appMode === 'manual' ? 'active' : ''}`}
-            onClick={() => setAppMode('manual')}
-          >
-            Manual Pronunciation
-          </button>
+          {modes.map(mode => (
+            <button
+              key={mode.key}
+              className={`toggle-btn ${appMode === mode.key ? 'active' : ''}`}
+              onClick={() => setAppMode(mode.key)}
+            >
+              <span className="toggle-icon">{mode.icon}</span>
+              <span className="toggle-label">{mode.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="main-content">
-          {appMode === 'dictation' ? (
+          {appMode === 'dictation' && (
             <>
               <AudioControls
                 handleText={handleText}
@@ -141,8 +141,14 @@ function App() {
 
               <WordSidebar />
             </>
-          ) : (
+          )}
+
+          {appMode === 'sentence' && (
             <ManualPronunciation />
+          )}
+
+          {appMode === 'word' && (
+            <WordReading />
           )}
         </div>
       </div>

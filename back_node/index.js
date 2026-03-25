@@ -8,6 +8,7 @@ const app = express()
 const whisperController = require('./router_handler/whisperController');
 const azureSpeechController = require('./router_handler/azureSpeechController');
 const dataController = require('./router_handler/dataController');
+const wordController = require('./router_handler/wordController');
 
 app.use(cors())
 app.use(express.json()) // Parse JSON bodies
@@ -20,6 +21,10 @@ router.post('/pronunciation-assessment', azureSpeechController.uploadMiddleware,
 router.post('/save-words', dataController.saveWords);
 router.get('/history', dataController.getHistory);
 router.get('/history/:filename', dataController.getHistoryItem);
+
+// Word Reading Routes
+router.post('/save-words-file', wordController.saveWordsFile);
+router.post('/record-attempt', wordController.recordAttempt);
 app.use(router)
 app.listen(8888, function () {
   console.log('server is running at http://127.0.0.1:8888')
