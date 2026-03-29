@@ -40,7 +40,6 @@ const ManualPronunciation = () => {
             if (displayRef.current && displayRef.current.contains(selection.anchorNode)) {
                 try {
                     const range = selection.getRangeAt(0);
-                    const container = range.commonAncestorContainer;
 
                     // We only want to snap if we're dealing with text nodes
                     // If the user selected across different elements, we might skip snapping for simplicity

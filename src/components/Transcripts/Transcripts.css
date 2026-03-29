@@ -2,19 +2,39 @@
     background: var(--bg-card);
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     padding: 2rem;
     box-shadow: var(--shadow-md);
     animation: slideUp 0.6s ease;
 }
 
+.transcripts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+}
+
 .transcripts-title {
     color: var(--text-primary);
     font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.transcripts-subtitle {
+    margin-top: 0.35rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.transcripts-meta {
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(18, 54, 41, 0.08);
+    color: var(--accent-deep);
+    font-size: 0.82rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid var(--border-color);
 }
 
 .transcripts-list {
@@ -48,24 +68,24 @@
     display: flex;
     gap: 1rem;
     padding: 1rem 1.25rem;
-    background: var(--bg-secondary);
+    background: rgba(255, 255, 255, 0.54);
     border: 2px solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     cursor: pointer;
     transition: all var(--transition-normal);
     align-items: flex-start;
 }
 
 .transcript-item:hover {
-    background: var(--bg-tertiary);
+    background: rgba(255, 255, 255, 0.78);
     border-color: var(--accent-primary);
-    transform: translateX(5px);
+    transform: translateX(4px);
 }
 
 .transcript-item.active {
-    background: rgba(99, 102, 241, 0.1);
+    background: var(--accent-gradient-soft);
     border-color: var(--accent-primary);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 20px rgba(178, 91, 42, 0.12);
 }
 
 .transcript-number {
@@ -78,13 +98,20 @@
     background: var(--accent-gradient);
     color: white;
     border-radius: 50%;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.875rem;
     box-shadow: var(--shadow-sm);
 }
 
 .transcript-item.active .transcript-number {
     animation: pulse 2s infinite;
+}
+
+.transcript-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
 }
 
 .transcript-text {
@@ -94,6 +121,12 @@
     line-height: 1.6;
 }
 
+.transcript-time {
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
 .transcripts-empty {
     text-align: center;
     padding: 3rem;
@@ -101,4 +134,12 @@
     font-style: italic;
 }
 
+@media (max-width: 640px) {
+    .transcripts-container {
+        padding: 1.2rem;
+    }
 
+    .transcripts-header {
+        flex-direction: column;
+    }
+}

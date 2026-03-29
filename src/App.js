@@ -12,7 +12,6 @@ import { useState, useRef } from 'react';
 function App() {
   const [text, setText] = useState('');
   const [number, setNumber] = useState(0);
-  const [overallAccuracy, setOverallAccuracy] = useState(null);
   const [diffHistory, setDiffHistory] = useState([]);
   const [audioFileName, setAudioFileName] = useState('');
   const [appMode, setAppMode] = useState('dictation');
@@ -21,7 +20,6 @@ function App() {
   const handleText = (text) => {
     setText(text);
     setNumber(0);
-    setOverallAccuracy(null);
     setDiffHistory([]);
   };
 
@@ -68,21 +66,71 @@ function App() {
   };
 
   const totalSentences = text?.transcript?.length || 0;
+  const practicedSentences = diffHistory.length;
+  const overallAccuracy = practicedSentences > 0
+    ? Math.round(diffHistory.reduce((sum, item) => sum + item.accuracy, 0) / practicedSentences)
+    : null;
+  const completionRate = totalSentences > 0
+    ? Math.round((practicedSentences / totalSentences) * 100)
+    : 0;
 
   const modes = [
-    { key: 'dictation', label: '语音转复读', icon: '🎧', desc: 'Dictation' },
-    { key: 'sentence', label: '句子阅读', icon: '📖', desc: 'Sentence Reading' },
-    { key: 'word', label: '单词阅读', icon: '📝', desc: 'Word Reading' },
+    {
+      key: 'dictation',
+      label: '语音转复读',
+      icon: '🎧',
+      desc: 'Dictation Studio',
+      summary: '上传音频后按句精听、听写、跟读，实时查看差异和发音反馈。',
+    },
+    {
+      key: 'sentence',
+      label: '句子阅读',
+      icon: '📖',
+      desc: 'Sentence Reading',
+      summary: '粘贴任意长文本，选中句子或短语单独评测发音。',
+    },
+    {
+      key: 'word',
+      label: '单词阅读',
+      icon: '📝',
+      desc: 'Word Reading',
+      summary: '对词表做批量朗读和单词级诊断，适合冲刺发音细节。',
+    },
   ];
+  const activeMode = modes.find((mode) => mode.key === appMode);
 
   return (
     <div className="App">
-      <div className="app-header">
-        <h1 className="app-title">🎧 Listening & Pronunciation</h1>
-        <p className="app-subtitle">Improve your skills with real-time feedback</p>
-      </div>
-
       <div className="app-container">
+        <header className="app-header">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">AI Listening Lab</span>
+            <h1 className="app-title">Listening, Dictation, and Pronunciation in one focused workspace.</h1>
+            <p className="app-subtitle">
+              从导入音频到逐句纠错，再到单词级发音评估，把训练路径集中在一个页面里完成。
+            </p>
+          </div>
+
+          <div className="hero-stats">
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Current Mode</span>
+              <strong className="hero-stat-value">{activeMode?.desc}</strong>
+            </div>
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Practiced</span>
+              <strong className="hero-stat-value">{practicedSentences}/{totalSentences || '--'}</strong>
+            </div>
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Average Accuracy</span>
+              <strong className="hero-stat-value">{overallAccuracy !== null ? `${overallAccuracy}%` : '--'}</strong>
+            </div>
+            <div className="hero-stat-card">
+              <span className="hero-stat-label">Completion</span>
+              <strong className="hero-stat-value">{totalSentences > 0 ? `${completionRate}%` : '--'}</strong>
+            </div>
+          </div>
+        </header>
+
         <div className="mode-toggle">
           {modes.map(mode => (
             <button
@@ -96,6 +144,14 @@ function App() {
           ))}
         </div>
 
+        <section className="mode-spotlight">
+          <div>
+            <span className="spotlight-kicker">{activeMode?.label}</span>
+            <h2 className="spotlight-title">{activeMode?.desc}</h2>
+          </div>
+          <p className="spotlight-text">{activeMode?.summary}</p>
+        </section>
+
         <div className="main-content">
           {appMode === 'dictation' && (
             <>
@@ -106,37 +162,60 @@ function App() {
                 text={text}
                 onReplay={replayRef}
                 onAudioNameChange={handleAudioNameChange}
+                audioFileName={audioFileName}
               />
 
-              {text && totalSentences > 0 && (
-                <>
-                  <ProgressBar
-                    current={number}
-                    total={totalSentences}
-                    accuracy={overallAccuracy}
-                  />
-
-                  <div className="practice-section">
-                    <DiffCom
-                      text={text}
-                      number={number}
-                      onNext={handleNext}
-                      onCheck={handleReplay}
-                      onReplayAudio={handleReplayAudio}
+              {text && totalSentences > 0 ? (
+                <div className="dictation-layout">
+                  <div className="dictation-main">
+                    <ProgressBar
+                      current={number}
+                      total={totalSentences}
+                      accuracy={overallAccuracy}
                     />
+
+                    <div className="practice-section">
+                      <DiffCom
+                        text={text}
+                        number={number}
+                        onNext={handleNext}
+                        onCheck={handleReplay}
+                        onReplayAudio={handleReplayAudio}
+                      />
+                    </div>
                   </div>
 
-                  <DiffHistory
-                    history={diffHistory}
-                    audioFileName={audioFileName}
-                  />
+                  <aside className="dictation-side">
+                    <Transcripts
+                      text={text?.transcript}
+                      currentNumber={number}
+                      onSentenceClick={handleSentenceClick}
+                    />
 
-                  <Transcripts
-                    text={text?.transcript}
-                    currentNumber={number}
-                    onSentenceClick={handleSentenceClick}
-                  />
-                </>
+                    <DiffHistory
+                      history={diffHistory}
+                      audioFileName={audioFileName}
+                    />
+                  </aside>
+                </div>
+              ) : (
+                <section className="empty-workspace">
+                  <div className="empty-workspace-card">
+                    <span className="empty-step">01</span>
+                    <h3>导入一段音频</h3>
+                    <p>上传新的练习素材，或从历史记录恢复之前的训练会话。</p>
+                  </div>
+                  <div className="empty-workspace-card">
+                    <span className="empty-step">02</span>
+                    <h3>逐句听写和跟读</h3>
+                    <p>用键盘快捷键快速切句，先听写，再录音做发音评估。</p>
+                  </div>
+                  <div className="empty-workspace-card">
+                    <span className="empty-step">03</span>
+                    <h3>复盘错误与生词</h3>
+                    <p>右侧历史和底部词汇侧栏会保留你需要反复回看的内容。</p>
+                  </div>
+                </section>
               )}
 
               <WordSidebar />

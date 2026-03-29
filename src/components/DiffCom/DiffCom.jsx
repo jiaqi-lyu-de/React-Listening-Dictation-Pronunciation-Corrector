@@ -89,6 +89,26 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
     }
   };
 
+  const handleCheck = () => {
+    if (!userInput.trim()) {
+      return;
+    }
+    setIsChecked(true);
+    saveToHistory();
+  };
+
+  const handleClear = () => {
+    setUserInput('');
+    setDiff([]);
+    setAccuracy(null);
+    setIsChecked(false);
+    setPronunciationResult(null);
+    setPronunciationError(null);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   const handleKeyDown = (event) => {
     // Tab - Replay current sentence
     if (event.key === 'Tab') {
@@ -117,16 +137,52 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
     // Ctrl/Cmd + Enter - Check/Submit input and save to history
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault();
-      setIsChecked(true);
-      // Calculate final accuracy
-      // saveToHistory();
+      handleCheck();
     }
   };
 
   const originalText = text?.transcript?.[number]?.speech || "";
+  const diffStats = diff.reduce((acc, part) => {
+    const wordCount = part.value.trim() ? part.value.trim().split(/\s+/).length : 0;
+    if (part.added) acc.extra += wordCount;
+    if (part.removed) acc.missed += wordCount;
+    if (!part.added && !part.removed) acc.correct += wordCount;
+    return acc;
+  }, { correct: 0, missed: 0, extra: 0 });
 
   return (
     <div className="diff-container">
+      <div className="reference-section">
+        <div className="reference-header">
+          <div>
+            <span className="input-title">Reference Sentence</span>
+            <p className="reference-text">{originalText || 'Load audio to begin sentence-by-sentence dictation.'}</p>
+          </div>
+          <button className="reference-audio-btn" onClick={onReplayAudio}>
+            Replay Audio
+          </button>
+        </div>
+
+        <div className="diff-stats">
+          <div className="diff-stat-pill">
+            <span>Correct</span>
+            <strong>{diffStats.correct}</strong>
+          </div>
+          <div className="diff-stat-pill">
+            <span>Missed</span>
+            <strong>{diffStats.missed}</strong>
+          </div>
+          <div className="diff-stat-pill">
+            <span>Extra</span>
+            <strong>{diffStats.extra}</strong>
+          </div>
+          <div className={`diff-stat-pill emphasis ${accuracy !== null ? 'visible' : ''}`}>
+            <span>Accuracy</span>
+            <strong>{accuracy !== null ? `${accuracy}%` : '--'}</strong>
+          </div>
+        </div>
+      </div>
+
       <div className="input-section">
         <h3 className="input-title">Your Input</h3>
         <textarea
@@ -143,6 +199,20 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
             Accuracy: {accuracy}%
           </div>
         )}
+        <div className="input-actions">
+          <button className="input-action secondary" onClick={handleClear} disabled={!userInput}>
+            Clear
+          </button>
+          <button className="input-action secondary" onClick={onReplayAudio}>
+            Replay
+          </button>
+          <button className="input-action primary" onClick={handleCheck} disabled={!userInput.trim()}>
+            Check Answer
+          </button>
+          <button className="input-action primary ghost" onClick={onNext}>
+            Next Sentence
+          </button>
+        </div>
       </div>
 
       {/* Render the diff directly as JSX */}
@@ -196,7 +266,7 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
       <div className="keyboard-hints">
         <span className="hint"><kbd>Tab</kbd> Replay</span>
         <span className="hint"><kbd>Enter</kbd> Next</span>
-        <span className="hint"><kbd>Cmd+Enter</kbd> Check</span>
+        <span className="hint"><kbd>Cmd/Ctrl+Enter</kbd> Check</span>
         <span className="hint"><kbd>Cmd+B</kbd> save word</span>
         <span className="hint"><kbd>Double Click</kbd> read word</span>
         <span className="hint"><kbd>Right Click</kbd> replay word</span>
