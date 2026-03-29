@@ -21,8 +21,8 @@ const useAzureSpeech = () => {
   const recognizerRef = useRef(null);
   const recorderId = useRef(Math.random().toString(36).substr(2, 9));
 
-  // Cancel any ongoing recording when another component starts recording
-  const cancelRecording = useCallback(() => {
+  // Utility to close recognizer and reset state
+  const cleanupRecognizer = useCallback(() => {
     if (recognizerRef.current) {
       try {
         recognizerRef.current.close();
@@ -30,8 +30,13 @@ const useAzureSpeech = () => {
       recognizerRef.current = null;
     }
     setIsRecording(false);
-    setIsProcessing(false);
   }, []);
+
+  // Cancel any ongoing recording when another component starts recording
+  const cancelRecording = useCallback(() => {
+    cleanupRecognizer();
+    setIsProcessing(false);
+  }, [cleanupRecognizer]);
 
   // Listen for recording-started events from other speech components
   useEffect(() => {
@@ -145,15 +150,11 @@ const useAzureSpeech = () => {
 
     } catch (err) {
       setError(err.message || 'Pronunciation assessment failed');
-      setIsRecording(false);
+      cleanupRecognizer();
       setIsProcessing(false);
-      if (recognizerRef.current) {
-        try { recognizerRef.current.close(); } catch (e) { /* ignore */ }
-        recognizerRef.current = null;
-      }
       return null;
     }
-  }, [isRecording]);
+  }, [isRecording, cleanupRecognizer]);
 
   /**
    * Start continuous pronunciation assessment.
@@ -247,7 +248,7 @@ const useAzureSpeech = () => {
       setError('Error: ' + err.message);
       cleanupRecognizer();
     }
-  }, [isRecording]);
+  }, [isRecording, cleanupRecognizer]);
 
   /**
    * Stop continuous assessment and return overall scores.
@@ -266,14 +267,17 @@ const useAzureSpeech = () => {
 
       recognizerRef.current.stopContinuousRecognitionAsync(
         () => {
-          // Calculate overall scores from segments
+          // Calculate overall scores and aggregate text/words from segments
           let totalAccuracy = 0, totalFluency = 0, totalCompleteness = 0, totalPron = 0;
           let count = 0;
+          let recognizedText = "";
+          let allWords = [];
 
           segments.forEach(seg => {
             const nBest = seg.NBest;
             if (nBest && nBest.length > 0) {
-              const pa = nBest[0].PronunciationAssessment;
+              const bestResult = nBest[0];
+              const pa = bestResult.PronunciationAssessment;
               if (pa) {
                 totalAccuracy += pa.AccuracyScore || 0;
                 totalFluency += pa.FluencyScore || 0;
@@ -281,14 +285,42 @@ const useAzureSpeech = () => {
                 totalPron += pa.PronScore || 0;
                 count++;
               }
+
+              // Aggregate words and text
+              if (bestResult.Words) {
+                bestResult.Words.forEach(w => {
+                  allWords.push({
+                    word: w.Word,
+                    accuracyScore: w.PronunciationAssessment?.AccuracyScore || 0,
+                    errorType: w.PronunciationAssessment?.ErrorType || 'None',
+                    syllables: w.Syllables ? w.Syllables.map(s => ({
+                      syllable: s.Syllable,
+                      accuracyScore: s.PronunciationAssessment?.AccuracyScore || 0
+                    })) : [],
+                    phonemes: w.Phonemes ? w.Phonemes.map(p => ({
+                      phoneme: p.Phoneme,
+                      accuracyScore: p.PronunciationAssessment?.AccuracyScore || 0
+                    })) : []
+                  });
+                });
+              }
+              if (bestResult.DisplayText) {
+                recognizedText += (recognizedText ? " " : "") + bestResult.DisplayText;
+              }
             }
           });
 
           const overall = count > 0 ? {
-            accuracy: totalAccuracy / count,
-            fluency: totalFluency / count,
-            completeness: totalCompleteness / count,
-            pronScore: totalPron / count
+            accuracy: totalAccuracy / count, // For WordReading back-compat
+            pronScore: totalPron / count,     // For WordReading back-compat
+            pronunciationAssessment: {
+              accuracyScore: totalAccuracy / count,
+              fluencyScore: totalFluency / count,
+              completenessScore: totalCompleteness / count,
+              pronunciationScore: totalPron / count
+            },
+            words: allWords,
+            recognizedText: recognizedText
           } : null;
 
           cleanupRecognizer();
@@ -303,15 +335,7 @@ const useAzureSpeech = () => {
         }
       );
     });
-  }, [isRecording]);
-
-  const cleanupRecognizer = useCallback(() => {
-    if (recognizerRef.current) {
-      try { recognizerRef.current.close(); } catch (e) { /* ignore */ }
-      recognizerRef.current = null;
-    }
-    setIsRecording(false);
-  }, []);
+  }, [isRecording, cleanupRecognizer]);
 
   return {
     isRecording,

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
 import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import './ManualPronunciation.css';
@@ -10,18 +10,19 @@ const ManualPronunciation = () => {
     const [pronunciationResult, setPronunciationResult] = useState(null);
     const [pronunciationError, setPronunciationError] = useState(null);
     const displayRef = useRef(null);
+    const textareaRef = useRef(null);
 
     // Update display text when input text changes
     const handleInputChange = (e) => {
         setInputText(e.target.value);
     };
 
-    const handleApplyText = () => {
+    const handleApplyText = useCallback(() => {
         setDisplayText(inputText);
         setPronunciationResult(null);
         setPronunciationError(null);
         setSelectedText('');
-    };
+    }, [inputText]);
 
     const clearText = () => {
         setInputText('');
@@ -29,6 +30,10 @@ const ManualPronunciation = () => {
         setPronunciationResult(null);
         setPronunciationError(null);
         setSelectedText('');
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+        textareaRef.current?.focus();
     };
 
     // Handle text selection
@@ -81,6 +86,22 @@ const ManualPronunciation = () => {
         }
     };
 
+    const handleUseFullText = () => {
+        setSelectedText('');
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+    };
+
+    const handleCopySelection = async () => {
+        if (!selectedText) return;
+        try {
+            await navigator.clipboard.writeText(selectedText);
+        } catch (error) {
+            console.error('Copy failed:', error);
+        }
+    };
+
     // Add event listeners for selection changes
     useEffect(() => {
         document.addEventListener('selectionchange', handleSelection);
@@ -88,6 +109,29 @@ const ManualPronunciation = () => {
             document.removeEventListener('selectionchange', handleSelection);
         };
     }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                if (document.activeElement === textareaRef.current && inputText.trim()) {
+                    event.preventDefault();
+                    handleApplyText();
+                }
+            }
+
+            if (event.key === 'Escape') {
+                setSelectedText('');
+                if (window.getSelection) {
+                    window.getSelection().removeAllRanges();
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [inputText, handleApplyText]);
+
+    const wordCount = displayText ? displayText.trim().split(/\s+/).filter(Boolean).length : 0;
 
     const handlePronunciationResult = (result) => {
         setPronunciationResult(result);
@@ -102,10 +146,20 @@ const ManualPronunciation = () => {
     return (
         <div className="manual-pronunciation-container">
             <div className="input-section">
-                <h3 className="section-title">Enter Text to Practice</h3>
+                <div className="mp-section-head">
+                    <div>
+                        <h3 className="section-title">Enter Text to Practice</h3>
+                        <p className="mp-section-desc">粘贴任意文本，然后高亮单词、短语或整段做单独评测。</p>
+                    </div>
+                    <div className="mp-status-chips">
+                        <span className="mp-status-chip">{wordCount || 0} words</span>
+                        <span className="mp-status-chip">{selectedText ? 'Selection active' : 'Full text mode'}</span>
+                    </div>
+                </div>
                 <textarea
+                    ref={textareaRef}
                     className="text-input"
-                    placeholder="Type or paste the text you want to practice reading aloud..."
+                    placeholder="Type or paste the text you want to practice reading aloud... (Cmd/Ctrl+Enter to apply)"
                     value={inputText}
                     onChange={handleInputChange}
                     rows={4}
@@ -141,6 +195,16 @@ const ManualPronunciation = () => {
                         ) : (
                             <span className="no-selection">None (Please highlight text above)</span>
                         )}
+                    </div>
+
+                    <div className="mp-selection-actions">
+                        <button className="mp-selection-btn" onClick={handleUseFullText}>
+                            Practice Full Text
+                        </button>
+                        <button className="mp-selection-btn" onClick={handleCopySelection} disabled={!selectedText}>
+                            Copy Selection
+                        </button>
+                        <span className="mp-shortcut-tip"><kbd>Esc</kbd> clear selection</span>
                     </div>
 
                     <div className="recorder-section">

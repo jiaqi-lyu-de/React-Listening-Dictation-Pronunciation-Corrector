@@ -13,6 +13,7 @@ const WordGrid = ({
     baseIndex,       // Index offset for current page
     wordResults,     // Map<absIdx, result>
     pendingDeletions,// Set<absIdx>
+    selectedWordIndex,
     currentPage,
     totalPages,
     pageStart,
@@ -78,7 +79,7 @@ const WordGrid = ({
                         return (
                             <div
                                 key={absIdx}
-                                className={`wr-word-chip ${result ? 'scored' : ''} ${level} ${isDeleted ? 'deleted' : ''}`}
+                                className={`wr-word-chip ${result ? 'scored' : ''} ${level} ${isDeleted ? 'deleted' : ''} ${selectedWordIndex === absIdx ? 'active' : ''}`}
                                 data-index={absIdx}
                                 onClick={() => {
                                     playWord(item.word);

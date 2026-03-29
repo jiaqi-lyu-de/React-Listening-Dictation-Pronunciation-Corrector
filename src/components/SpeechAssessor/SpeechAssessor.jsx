@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import useAzureSpeech from '../../utils/useAzureSpeech';
 import './SpeechAssessor.css';
 
@@ -8,22 +8,42 @@ import './SpeechAssessor.css';
  * No backend proxy needed.
  */
 const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
-    const { isRecording, isProcessing, assessPronunciation } = useAzureSpeech();
+    const {
+        isRecording,
+        isProcessing,
+        startContinuousAssessment,
+        stopContinuousAssessment,
+        cancelRecording
+    } = useAzureSpeech();
+
     const [audioUrl, setAudioUrl] = useState(null);
+    const segmentsRef = useRef([]);
 
     const handleToggleRecording = async () => {
-        if (isRecording || isProcessing) return;
+        if (isProcessing) return;
 
-        setAudioUrl(null);
-        const result = await assessPronunciation(referenceText);
-
-        if (result) {
-            if (onAssessmentResult) {
-                onAssessmentResult(result);
+        if (isRecording) {
+            // Stop recording and process results
+            const result = await stopContinuousAssessment(segmentsRef.current);
+            if (result) {
+                if (onAssessmentResult) onAssessmentResult(result);
+            } else if (!isRecording) {
+                // Was canceled or failed
             }
-        } else if (onError) {
-            onError('Pronunciation assessment failed. Please try again.');
+            return;
         }
+
+        // Start recording
+        setAudioUrl(null);
+        segmentsRef.current = [];
+
+        startContinuousAssessment(
+            referenceText,
+            null, // onWordRecognized (not used here for now)
+            (segment) => {
+                segmentsRef.current.push(segment);
+            }
+        );
     };
 
     return (
@@ -36,16 +56,16 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
                 {isProcessing ? (
                     <>
                         <span className="spinner"></span>
-                        Processing...
+                        正在处理...
                     </>
                 ) : isRecording ? (
                     <>
-                        <span className="recording-dot"></span>
-                        Listening...
+                        <span className="stop-icon">■</span>
+                        结束录音
                     </>
                 ) : (
                     <>
-                        🎤 Record Pronunciation
+                        🎤 开始录音
                     </>
                 )}
             </button>

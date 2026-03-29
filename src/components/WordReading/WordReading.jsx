@@ -29,6 +29,11 @@ const WordReading = () => {
     const segmentsRef = useRef([]);
     const { isRecording, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
 
+    const showToast = useCallback((message) => {
+        setToast(message);
+        setTimeout(() => setToast(''), 2500);
+    }, []);
+
     // Load words from public/words.json
     useEffect(() => {
         const loadWords = async () => {
@@ -44,19 +49,16 @@ const WordReading = () => {
             }
         };
         loadWords();
-    }, []);
+    }, [showToast]);
 
     // Derived values
     const totalPages = Math.max(1, Math.ceil(allWords.length / PAGE_SIZE));
     const pageStart = currentPage * PAGE_SIZE;
     const pageEnd = Math.min(pageStart + PAGE_SIZE, allWords.length);
     const pageWords = allWords.slice(pageStart, pageEnd);
-
-    // Toast helper
-    const showToast = useCallback((message) => {
-        setToast(message);
-        setTimeout(() => setToast(''), 2500);
-    }, []);
+    const pageScoredCount = pageWords.reduce((count, _, i) => count + (wordResults.has(pageStart + i) ? 1 : 0), 0);
+    const pagePendingDeleteCount = pageWords.reduce((count, _, i) => count + (pendingDeletions.has(pageStart + i) ? 1 : 0), 0);
+    const pageRemainingCount = Math.max(0, pageWords.length - pagePendingDeleteCount);
 
     // Toggle delete mark
     const toggleDelete = useCallback((absIdx) => {
@@ -153,6 +155,7 @@ const WordReading = () => {
             stopContinuousAssessment(segmentsRef.current).then(overall => {
                 if (overall) {
                     setOverallScores(overall);
+                    showToast('Page assessment complete');
                 }
             });
         } else {
@@ -168,6 +171,7 @@ const WordReading = () => {
             setWordResults(new Map());
             setOverallScores(null);
             setSelectedWordIndex(null);
+            showToast('Started page assessment');
 
             startContinuousAssessment(
                 referenceText,
@@ -226,6 +230,18 @@ const WordReading = () => {
         }
     }, [selectedWordIndex, allWords, recordLowScore]);
 
+    const selectRelativeWord = useCallback((direction) => {
+        if (pageWords.length === 0) return;
+
+        if (selectedWordIndex === null) {
+            setSelectedWordIndex(pageStart);
+            return;
+        }
+
+        const nextIndex = Math.min(pageEnd - 1, Math.max(pageStart, selectedWordIndex + direction));
+        setSelectedWordIndex(nextIndex);
+    }, [pageEnd, pageStart, pageWords.length, selectedWordIndex]);
+
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -234,6 +250,12 @@ const WordReading = () => {
             if (e.key === ' ' || e.code === 'Space') {
                 e.preventDefault();
                 handleBatchRecord();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectRelativeWord(-1);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectRelativeWord(1);
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 handlePrevPage();
@@ -247,7 +269,7 @@ const WordReading = () => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [handleBatchRecord, handlePrevPage, handleNextPage]);
+    }, [handleBatchRecord, handlePrevPage, handleNextPage, selectRelativeWord]);
 
     if (loading) {
         return (
@@ -265,6 +287,25 @@ const WordReading = () => {
             <div className="wr-layout">
                 {/* Left: Word Grid + Controls */}
                 <div className="wr-left">
+                    <div className="wr-session-bar">
+                        <div className="wr-session-chip">
+                            <span className="wr-session-chip-label">This Page</span>
+                            <strong>{pageWords.length} words</strong>
+                        </div>
+                        <div className="wr-session-chip">
+                            <span className="wr-session-chip-label">Scored</span>
+                            <strong>{pageScoredCount}</strong>
+                        </div>
+                        <div className="wr-session-chip">
+                            <span className="wr-session-chip-label">Pending Delete</span>
+                            <strong>{pagePendingDeleteCount}</strong>
+                        </div>
+                        <div className="wr-session-chip">
+                            <span className="wr-session-chip-label">Active Pool</span>
+                            <strong>{pageRemainingCount}</strong>
+                        </div>
+                    </div>
+
                     {/* Overall Summary */}
                     {overallScores && (
                         <div className="wr-overall-summary">
@@ -302,6 +343,7 @@ const WordReading = () => {
                         baseIndex={pageStart}
                         wordResults={wordResults}
                         pendingDeletions={pendingDeletions}
+                        selectedWordIndex={selectedWordIndex}
                         currentPage={currentPage}
                         totalPages={totalPages}
                         pageStart={pageStart}
@@ -331,7 +373,7 @@ const WordReading = () => {
                             </div>
                         </button>
                         <p className="wr-record-hint">
-                            {isRecording ? 'Listening… press Space to stop' : 'Space to Read Page'}
+                            {isRecording ? 'Listening… press Space to stop' : 'Space to assess the full page'}
                         </p>
                     </div>
                 </div>
@@ -343,6 +385,10 @@ const WordReading = () => {
                             word={selectedWord}
                             wordResult={selectedResult}
                             onRecordResult={handleSingleRecordResult}
+                            onPrevWord={() => selectRelativeWord(-1)}
+                            onNextWord={() => selectRelativeWord(1)}
+                            hasPrev={selectedWordIndex > pageStart}
+                            hasNext={selectedWordIndex !== null && selectedWordIndex < pageEnd - 1}
                             onClose={() => setSelectedWordIndex(null)}
                         />
                     ) : (
@@ -355,6 +401,8 @@ const WordReading = () => {
                             <div className="wr-keyboard-hints">
                                 <div className="wr-kbd-hint"><kbd>Space</kbd> Batch Read</div>
                                 <div className="wr-kbd-hint"><kbd>←</kbd><kbd>→</kbd> Turn Page</div>
+                                <div className="wr-kbd-hint"><kbd>↑</kbd><kbd>↓</kbd> Move Focus</div>
+                                <div className="wr-kbd-hint"><kbd>Esc</kbd> Close Detail</div>
                             </div>
                         </div>
                     )}

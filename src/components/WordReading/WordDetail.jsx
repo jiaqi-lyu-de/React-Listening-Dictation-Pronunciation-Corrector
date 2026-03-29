@@ -18,7 +18,7 @@ const getScoreColor = (score) => {
  * Shows pronunciation practice (single word recording), phoneme chips,
  * definitions, examples, and idioms.
  */
-const WordDetail = ({ word, wordResult, onRecordResult, onClose }) => {
+const WordDetail = ({ word, wordResult, onRecordResult, onClose, onPrevWord, onNextWord, hasPrev, hasNext }) => {
     const { isRecording, assessPronunciation } = useAzureSpeech();
 
     if (!word) return null;
@@ -42,6 +42,15 @@ const WordDetail = ({ word, wordResult, onRecordResult, onClose }) => {
         }
     };
 
+    const handleSpeakWord = () => {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word.word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    };
+
     return (
         <div className="wr-detail-panel">
             <div className="wr-detail-header">
@@ -55,6 +64,18 @@ const WordDetail = ({ word, wordResult, onRecordResult, onClose }) => {
                     </div>
                 )}
                 <button className="wr-detail-close" onClick={onClose} aria-label="Close">×</button>
+            </div>
+
+            <div className="wr-detail-actions">
+                <button className="wr-detail-action-btn" onClick={handleSpeakWord}>
+                    Listen Word
+                </button>
+                <button className="wr-detail-action-btn" onClick={onPrevWord} disabled={!hasPrev}>
+                    Previous
+                </button>
+                <button className="wr-detail-action-btn" onClick={onNextWord} disabled={!hasNext}>
+                    Next
+                </button>
             </div>
 
             <div className="wr-detail-dashboard">

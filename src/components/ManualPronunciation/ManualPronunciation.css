@@ -15,6 +15,35 @@
     margin: 0 0 16px 0;
 }
 
+.mp-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.mp-section-desc {
+    color: var(--text-secondary, #475569);
+    font-size: 0.95rem;
+}
+
+.mp-status-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.mp-status-chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--primary-color, #3b82f6);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
 .input-section {
     margin-bottom: 32px;
 }
@@ -124,6 +153,43 @@
     font-size: 1rem;
 }
 
+.mp-selection-actions {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mp-selection-btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color, #e2e8f0);
+    background: white;
+    color: var(--text-primary, #1e293b);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mp-selection-btn:hover:not(:disabled) {
+    border-color: var(--primary-color, #3b82f6);
+    color: var(--primary-color, #3b82f6);
+}
+
+.mp-selection-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mp-shortcut-tip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
 .selection-label {
     font-weight: 500;
     color: #475569;
@@ -153,6 +219,16 @@
     margin-top: 8px;
     font-size: 0.85rem;
     color: #64748b;
+}
+
+@media (max-width: 720px) {
+    .mp-section-head {
+        flex-direction: column;
+    }
+
+    .mp-status-chips {
+        justify-content: flex-start;
+    }
 }
 
 /* Reuse styling for results from DiffCom */
