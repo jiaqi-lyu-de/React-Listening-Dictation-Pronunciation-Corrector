@@ -4,11 +4,10 @@ import { getIPA } from '../../utils/ipaMap';
 import './PronunciationResults.css';
 
 const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Assessment" }) => {
-    const { isRecording: isWordRecording, isProcessing: processingWord, assessPronunciation } = useAzureSpeech();
+    const { isRecording: isWordRecording, isProcessing: processingWord, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
     const [recordingWordIndex, setRecordingWordIndex] = useState(null);
     const [wordPracticeResults, setWordPracticeResults] = useState({});
     const [selectedProblemWordIndex, setSelectedProblemWordIndex] = useState(null);
-    const [savedWords, setSavedWords] = useState(new Set());
     const attemptedProblemWordsRef = useRef(new Set());
 
     const getScoreClass = (score) => {
@@ -50,17 +49,28 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
     };
 
     const runWordAssessment = async (word, index) => {
-        if (processingWord || isWordRecording) return;
+        if (processingWord) return;
 
-        setRecordingWordIndex(index);
-        const result = await assessPronunciation(word);
-        setRecordingWordIndex(null);
-
-        if (result) {
-            setWordPracticeResults(prev => ({
-                ...prev,
-                [index]: result
-            }));
+        if (isWordRecording) {
+            if (recordingWordIndex === index) {
+                // Manually stop the recording
+                const result = await stopContinuousAssessment();
+                setRecordingWordIndex(null);
+                
+                if (result && result.words && result.words.length > 0) {
+                    setWordPracticeResults(prev => ({
+                        ...prev,
+                        [index]: result
+                    }));
+                }
+            } else {
+                // If recording another word, ignore or could stop it
+                return;
+            }
+        } else {
+            // Start recording
+            setRecordingWordIndex(index);
+            startContinuousAssessment(word);
         }
     };
 
@@ -71,19 +81,6 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
     const selectProblemWord = (index, wordText) => {
         setSelectedProblemWordIndex(index);
         speakWord(wordText);
-    };
-
-    const handleSaveToVocabulary = async (wordStr) => {
-        try {
-            await fetch('http://localhost:8888/save-words', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ words: [wordStr] })
-            });
-            setSavedWords(prev => new Set(prev).add(wordStr));
-        } catch (e) {
-            console.error('Failed to save to vocab', e);
-        }
     };
 
     const allWords = useMemo(() => pronunciationResult?.words || [], [pronunciationResult]);
@@ -221,6 +218,12 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
                         <div className="word-list word-list-sidebar">
                             {problemWords.map((word) => {
                                 const index = word.sourceIndex;
+                                const practiceResult = wordPracticeResults[index];
+                                const currentAccuracy = practiceResult
+                                    ? practiceResult.pronunciationAssessment.accuracyScore
+                                    : word.accuracyScore;
+                                const currentErrorType = practiceResult?.words?.[0]?.errorType || word.errorType;
+
                                 return (
                                     <div
                                         key={index}
@@ -237,23 +240,14 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
                                     >
                                         <div className="word-details-top">
                                             <span
-                                                className={`word-item ${getWordClass(word.errorType, word.accuracyScore)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
-                                                title={`Accuracy: ${Math.round(word.accuracyScore)}%`}
+                                                className={`word-item ${getWordClass(currentErrorType, currentAccuracy)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
+                                                title={`Accuracy: ${Math.round(currentAccuracy)}%`}
                                             >
                                                 {word.word}
                                             </span>
-                                            <button
-                                                type="button"
-                                                className={`mini-action-btn ${savedWords.has(word.word) ? 'saved' : ''}`}
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    handleSaveToVocabulary(word.word);
-                                                }}
-                                                disabled={savedWords.has(word.word)}
-                                                title="Save to Vocabulary"
-                                            >
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v13a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                            </button>
+                                            <span className={`word-details-accuracy-badge ${getScoreClass(currentAccuracy)}`}>
+                                                {Math.round(currentAccuracy)}
+                                            </span>
                                         </div>
 
                                     </div>

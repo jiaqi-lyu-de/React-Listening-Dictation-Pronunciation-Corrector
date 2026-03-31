@@ -20,6 +20,7 @@ const useAzureSpeech = () => {
   const [error, setError] = useState(null);
   const recognizerRef = useRef(null);
   const recorderId = useRef(Math.random().toString(36).substr(2, 9));
+  const segmentsRef = useRef([]);
 
   // Utility to close recognizer and reset state
   const cleanupRecognizer = useCallback(() => {
@@ -77,6 +78,16 @@ const useAzureSpeech = () => {
         AZURE_SPEECH_KEY, AZURE_SPEECH_REGION
       );
       speechConfig.speechRecognitionLanguage = 'en-US';
+
+      // Faster end for single words (default end silence timeout is much longer)
+      const wordCount = referenceText.trim().split(/\s+/).length;
+      if (wordCount === 1) {
+        speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "500");
+      } else {
+        speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs, "2000");  
+      }
+
+
 
       const pronunciationConfig = new SpeechSDK.PronunciationAssessmentConfig(
         referenceText,
@@ -174,6 +185,7 @@ const useAzureSpeech = () => {
     setIsRecording(true);
     setError(null);
     setResult(null);
+    segmentsRef.current = [];
 
     try {
       const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
@@ -187,6 +199,7 @@ const useAzureSpeech = () => {
         SpeechSDK.PronunciationAssessmentGranularity.Phoneme,
         true
       );
+      pronunciationConfig.phonemeAlphabet = "IPA";
 
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
@@ -201,6 +214,7 @@ const useAzureSpeech = () => {
           if (jsonStr) {
             try {
               const parsed = JSON.parse(jsonStr);
+              segmentsRef.current.push(parsed);
               if (onSegmentResult) onSegmentResult(parsed);
 
               // Extract individual word results for real-time highlighting
@@ -253,10 +267,9 @@ const useAzureSpeech = () => {
   /**
    * Stop continuous assessment and return overall scores.
    * 
-   * @param {Array} segments - Collected segment results
    * @returns {Promise<object|null>} Overall scores
    */
-  const stopContinuousAssessment = useCallback((segments = []) => {
+  const stopContinuousAssessment = useCallback(() => {
     return new Promise((resolve) => {
       if (!isRecording || !recognizerRef.current) {
         resolve(null);
@@ -273,7 +286,7 @@ const useAzureSpeech = () => {
           let recognizedText = "";
           let allWords = [];
 
-          segments.forEach(seg => {
+          segmentsRef.current.forEach(seg => {
             const nBest = seg.NBest;
             if (nBest && nBest.length > 0) {
               const bestResult = nBest[0];
