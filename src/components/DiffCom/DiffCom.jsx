@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
-import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import './DiffCom.css';
 import { diffWords } from 'diff';
 
-const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
+const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio, onPronunciationResult }) => {
   const [userInput, setUserInput] = useState('');
   const [diff, setDiff] = useState([]);
   const [accuracy, setAccuracy] = useState(null);
   const [isChecked, setIsChecked] = useState(false);
-  const [pronunciationResult, setPronunciationResult] = useState(null);
   const [pronunciationError, setPronunciationError] = useState(null);
   const inputRef = useRef(null);
 
@@ -19,13 +17,13 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
     setDiff([]);
     setAccuracy(null);
     setIsChecked(false);
-    setPronunciationResult(null);
     setPronunciationError(null);
+    if (onPronunciationResult) onPronunciationResult(null);
     // Auto-focus input on sentence change
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [number]);
+  }, [number, onPronunciationResult]);
 
   const handleChange = (event) => {
     const inputText = event.target.value;
@@ -63,13 +61,13 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
   };
 
   const handlePronunciationResult = (result) => {
-    setPronunciationResult(result);
     setPronunciationError(null);
+    if (onPronunciationResult) onPronunciationResult(result);
   };
 
   const handlePronunciationError = (error) => {
     setPronunciationError(error);
-    setPronunciationResult(null);
+    if (onPronunciationResult) onPronunciationResult(null);
   };
 
   const saveToHistory = () => {
@@ -102,8 +100,8 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
     setDiff([]);
     setAccuracy(null);
     setIsChecked(false);
-    setPronunciationResult(null);
     setPronunciationError(null);
+    if (onPronunciationResult) onPronunciationResult(null);
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -260,8 +258,6 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio }) => {
           {pronunciationError}
         </div>
       )}
-
-      <PronunciationResults pronunciationResult={pronunciationResult} />
 
       <div className="keyboard-hints">
         <span className="hint"><kbd>Tab</kbd> Replay</span>

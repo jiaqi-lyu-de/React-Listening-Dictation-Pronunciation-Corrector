@@ -34,7 +34,3 @@ export const fetchAPI = async (url, method, options = {}) => {
     throw error;
   }
 };
-
-export default {
-    fetchAPI,
-};

@@ -6,7 +6,7 @@ import ProgressBar from './components/ProgressBar/ProgressBar';
 import DiffHistory from './components/DiffHistory/DiffHistory';
 import WordSidebar from './components/WordSidebar/WordSidebar';
 import ManualPronunciation from './components/ManualPronunciation/ManualPronunciation';
-import WordReading from './components/WordReading/WordReading';
+import PronunciationResults from './components/PronunciationResults/PronunciationResults';
 import { useState, useRef } from 'react';
 
 function App() {
@@ -14,6 +14,7 @@ function App() {
   const [number, setNumber] = useState(0);
   const [diffHistory, setDiffHistory] = useState([]);
   const [audioFileName, setAudioFileName] = useState('');
+  const [pronunciationResult, setPronunciationResult] = useState(null);
   const [appMode, setAppMode] = useState('dictation');
   const replayRef = useRef(null);
 
@@ -87,14 +88,7 @@ function App() {
       label: '句子阅读',
       icon: '📖',
       desc: 'Sentence Reading',
-      summary: '粘贴任意长文本，选中句子或短语单独评测发音。',
-    },
-    {
-      key: 'word',
-      label: '单词阅读',
-      icon: '📝',
-      desc: 'Word Reading',
-      summary: '对词表做批量朗读和单词级诊断，适合冲刺发音细节。',
+      summary: '粘贴任意长文本，选中句子或短语单独评测发音，并对问题词做集中补练。',
     },
   ];
   const activeMode = modes.find((mode) => mode.key === appMode);
@@ -107,7 +101,7 @@ function App() {
             <span className="hero-eyebrow">AI Listening Lab</span>
             <h1 className="app-title">Listening, Dictation, and Pronunciation in one focused workspace.</h1>
             <p className="app-subtitle">
-              从导入音频到逐句纠错，再到单词级发音评估，把训练路径集中在一个页面里完成。
+              从导入音频到逐句纠错，再到问题词补练，把训练路径集中在一个页面里完成。
             </p>
           </div>
 
@@ -181,6 +175,7 @@ function App() {
                         onNext={handleNext}
                         onCheck={handleReplay}
                         onReplayAudio={handleReplayAudio}
+                          onPronunciationResult={setPronunciationResult}
                       />
                     </div>
                   </div>
@@ -197,6 +192,12 @@ function App() {
                       audioFileName={audioFileName}
                     />
                   </aside>
+
+                    {pronunciationResult && (
+                      <div className="dictation-results">
+                        <PronunciationResults pronunciationResult={pronunciationResult} />
+                      </div>
+                    )}
                 </div>
               ) : (
                 <section className="empty-workspace">
@@ -224,10 +225,6 @@ function App() {
 
           {appMode === 'sentence' && (
             <ManualPronunciation />
-          )}
-
-          {appMode === 'word' && (
-            <WordReading />
           )}
         </div>
       </div>

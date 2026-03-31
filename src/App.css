@@ -278,8 +278,24 @@ body::before {
 .dictation-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+        "main side"
+        "results results";
     gap: 1.5rem;
     align-items: start;
+}
+
+.dictation-main {
+    grid-area: main;
+}
+
+.dictation-side {
+    grid-area: side;
+}
+
+.dictation-results {
+    grid-area: results;
 }
 
 .dictation-main,
@@ -423,9 +439,17 @@ body::before {
 }
 
 @media (max-width: 1080px) {
-    .app-header,
+    .app-header {
+        grid-template-columns: 1fr;
+    }
+
     .dictation-layout {
         grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            "main"
+            "side"
+            "results";
     }
 
     .mode-spotlight {

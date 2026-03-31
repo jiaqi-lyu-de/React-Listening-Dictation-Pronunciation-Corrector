@@ -12,8 +12,7 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
         isRecording,
         isProcessing,
         startContinuousAssessment,
-        stopContinuousAssessment,
-        cancelRecording
+        stopContinuousAssessment
     } = useAzureSpeech();
 
     const [audioUrl, setAudioUrl] = useState(null);
