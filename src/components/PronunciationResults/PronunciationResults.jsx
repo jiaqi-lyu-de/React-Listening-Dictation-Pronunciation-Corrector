@@ -61,7 +61,7 @@ const PronunciationResults = ({
                 // Manually stop the recording
                 const result = await stopContinuousAssessment();
                 setRecordingWordIndex(null);
-                
+
                 if (result && result.words && result.words.length > 0) {
                     setWordPracticeResults(prev => ({
                         ...prev,
@@ -418,11 +418,6 @@ const PronunciationResults = ({
                         )}
                     </div>
                 )}
-            </div>
-
-            <div className="recognized-text">
-                <h4 className="recognized-title">What you said (Raw String):</h4>
-                <p className="recognized-content">{pronunciationResult.recognizedText || "None"}</p>
             </div>
         </div>
     );

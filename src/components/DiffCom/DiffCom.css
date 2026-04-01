@@ -532,12 +532,6 @@ kbd {
     color: var(--error);
 }
 
-.recognized-text {
-    padding: 1rem;
-    background: rgba(255, 251, 245, 0.95);
-    border-radius: var(--radius-md);
-    border-left: 4px solid var(--accent-primary);
-}
 
 .recognized-title {
     color: var(--text-secondary);

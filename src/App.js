@@ -132,6 +132,13 @@ function App() {
       desc: 'Sentence Reading',
       summary: '粘贴任意长文本，选中句子或短语单独评测发音，并对问题词做集中补练。',
     },
+    {
+      key: 'word-reading',
+      label: '单词阅读',
+      icon: '📖',
+      desc: 'Word Reading',
+      summary: '粘贴任意长文本，选中句子或短语单独评测发音，并对问题词做集中补练。',
+    },
   ];
   const activeMode = modes.find((mode) => mode.key === appMode);
 
@@ -275,9 +282,10 @@ function App() {
             />
           )}
 
-          <section className="word-reading-area">
+          {appMode === 'word-reading' && (
             <WordReading historyWords={problemWordHistory} />
-          </section>
+          )}
+
         </div>
       </div>
     </div>

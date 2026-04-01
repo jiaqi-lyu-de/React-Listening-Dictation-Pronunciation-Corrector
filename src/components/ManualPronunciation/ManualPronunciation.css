@@ -421,12 +421,6 @@
     border-bottom: 2px solid #ef4444;
 }
 
-.recognized-text {
-    margin-top: 32px;
-    padding-top: 20px;
-    border-top: 1.5px solid var(--border-color, #f1f5f9);
-}
-
 .recognized-title {
     font-size: 1rem;
     color: #64748b;
