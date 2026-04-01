@@ -3,7 +3,7 @@ import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
 import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import './ManualPronunciation.css';
 
-const ManualPronunciation = () => {
+const ManualPronunciation = ({ onProblemWordsCaptured }) => {
     const [inputText, setInputText] = useState('');
     const [displayText, setDisplayText] = useState('');
     const [selectedText, setSelectedText] = useState('');
@@ -230,6 +230,8 @@ const ManualPronunciation = () => {
             <PronunciationResults
                 pronunciationResult={pronunciationResult}
                 title={`Pronunciation Assessment (${selectedText ? "Selection" : "Full Text"})`}
+                modeLabel="Sentence Reading"
+                onProblemWordsCaptured={onProblemWordsCaptured}
             />
         </div>
     );

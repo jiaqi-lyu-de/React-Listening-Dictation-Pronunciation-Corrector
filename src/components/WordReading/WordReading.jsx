@@ -16,7 +16,7 @@ const getScoreColor = (score) => {
  * WordReading — Main container for the Word Reading module.
  * Migrated from wordd project. Uses useAzureSpeech for all speech interactions.
  */
-const WordReading = () => {
+const WordReading = ({ historyWords = [] }) => {
     const [allWords, setAllWords] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [wordResults, setWordResults] = useState(new Map());
@@ -25,9 +25,23 @@ const WordReading = () => {
     const [overallScores, setOverallScores] = useState(null);
     const [toast, setToast] = useState('');
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('page');
+    const [historySelectedId, setHistorySelectedId] = useState(null);
+    const [historyWordResults, setHistoryWordResults] = useState(new Map());
 
     const segmentsRef = useRef([]);
     const { isRecording, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
+    const formatTimestamp = useCallback((value) => {
+        if (!value) return '';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    }, []);
 
     const showToast = useCallback((message) => {
         setToast(message);
@@ -271,6 +285,68 @@ const WordReading = () => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleBatchRecord, handlePrevPage, handleNextPage, selectRelativeWord]);
 
+    useEffect(() => {
+        if (viewMode !== 'history') return;
+        if (historyWords.length === 0) {
+            setHistorySelectedId(null);
+            return;
+        }
+        setHistorySelectedId((prev) => (prev && historyWords.some(entry => entry.id === prev)) ? prev : historyWords[0].id);
+    }, [historyWords, viewMode]);
+
+    useEffect(() => {
+        if (viewMode === 'page') {
+            setHistorySelectedId(null);
+        }
+    }, [viewMode]);
+
+    const selectedWord = selectedWordIndex !== null ? allWords[selectedWordIndex] : null;
+    const selectedResult = selectedWordIndex !== null ? wordResults.get(selectedWordIndex) : null;
+    const isHistoryMode = viewMode === 'history';
+    const historyDetailEntry = historySelectedId ? historyWords.find(entry => entry.id === historySelectedId) : null;
+    const dictionaryMatch = historyDetailEntry
+        ? allWords.find(word => word.word?.toLowerCase() === historyDetailEntry.word?.toLowerCase())
+        : null;
+    const historyDetailWord = historyDetailEntry
+        ? { ...(dictionaryMatch || {}), word: historyDetailEntry.word }
+        : null;
+    const baseHistoryResult = historyDetailEntry
+        ? {
+            accuracy: historyDetailEntry.accuracy,
+            wordGroups: historyDetailEntry.phonemes?.length
+                ? [{
+                    word: historyDetailEntry.word,
+                    phonemes: historyDetailEntry.phonemes
+                }]
+                : undefined
+        }
+        : null;
+    const historyDetailResult = historyDetailEntry
+        ? (historyWordResults.get(historyDetailEntry.id) || baseHistoryResult)
+        : null;
+    const detailWord = isHistoryMode ? historyDetailWord : selectedWord;
+    const detailResult = isHistoryMode ? historyDetailResult : selectedResult;
+    const detailHasPrev = !isHistoryMode && selectedWordIndex > pageStart;
+    const detailHasNext = !isHistoryMode && selectedWordIndex !== null && selectedWordIndex < pageEnd - 1;
+    const welcomeMessage = isHistoryMode
+        ? '在历史词单中选择一个读错的单词继续练习。'
+        : 'Choose a word from the left to start your focused pronunciation training.';
+    const handleHistoryRecordResult = useCallback((result) => {
+        if (!historyDetailEntry) return;
+        setHistoryWordResults((prev) => {
+            const next = new Map(prev);
+            next.set(historyDetailEntry.id, result);
+            return next;
+        });
+    }, [historyDetailEntry]);
+    const handleDetailClose = useCallback(() => {
+        if (isHistoryMode) {
+            setHistorySelectedId(null);
+        } else {
+            setSelectedWordIndex(null);
+        }
+    }, [isHistoryMode]);
+
     if (loading) {
         return (
             <div className="wr-container">
@@ -279,35 +355,71 @@ const WordReading = () => {
         );
     }
 
-    const selectedWord = selectedWordIndex !== null ? allWords[selectedWordIndex] : null;
-    const selectedResult = selectedWordIndex !== null ? wordResults.get(selectedWordIndex) : null;
-
     return (
         <div className="wr-container">
             <div className="wr-layout">
                 {/* Left: Word Grid + Controls */}
                 <div className="wr-left">
-                    <div className="wr-session-bar">
-                        <div className="wr-session-chip">
-                            <span className="wr-session-chip-label">This Page</span>
-                            <strong>{pageWords.length} words</strong>
-                        </div>
-                        <div className="wr-session-chip">
-                            <span className="wr-session-chip-label">Scored</span>
-                            <strong>{pageScoredCount}</strong>
-                        </div>
-                        <div className="wr-session-chip">
-                            <span className="wr-session-chip-label">Pending Delete</span>
-                            <strong>{pagePendingDeleteCount}</strong>
-                        </div>
-                        <div className="wr-session-chip">
-                            <span className="wr-session-chip-label">Active Pool</span>
-                            <strong>{pageRemainingCount}</strong>
+                    <div className="wr-mode-control">
+                        <div className="wr-mode-label">Word Pool</div>
+                        <div className="wr-mode-tabs">
+                            <button
+                                type="button"
+                                className={`wr-mode-btn ${!isHistoryMode ? 'active' : ''}`}
+                                onClick={() => setViewMode('page')}
+                                aria-pressed={!isHistoryMode}
+                            >
+                                This Page
+                            </button>
+                            <button
+                                type="button"
+                                className={`wr-mode-btn ${isHistoryMode ? 'active' : ''}`}
+                                onClick={() => setViewMode('history')}
+                                aria-pressed={isHistoryMode}
+                            >
+                                History
+                            </button>
                         </div>
                     </div>
 
-                    {/* Overall Summary */}
-                    {overallScores && (
+                    {isHistoryMode ? (
+                        <div className="wr-history-summary">
+                            <div className="wr-history-chip">
+                                <span className="wr-history-label">Saved history</span>
+                                <strong>{historyWords.length}</strong>
+                            </div>
+                            <div className="wr-history-chip">
+                                <span className="wr-history-label">Latest capture</span>
+                                <strong>{historyWords[0]?.word ?? '—'}</strong>
+                                {historyWords[0] && (
+                                    <span className="wr-history-subtext">
+                                        {formatTimestamp(historyWords[0].timestamp)}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="wr-session-bar">
+                            <div className="wr-session-chip">
+                                <span className="wr-session-chip-label">This Page</span>
+                                <strong>{pageWords.length} words</strong>
+                            </div>
+                            <div className="wr-session-chip">
+                                <span className="wr-session-chip-label">Scored</span>
+                                <strong>{pageScoredCount}</strong>
+                            </div>
+                            <div className="wr-session-chip">
+                                <span className="wr-session-chip-label">Pending Delete</span>
+                                <strong>{pagePendingDeleteCount}</strong>
+                            </div>
+                            <div className="wr-session-chip">
+                                <span className="wr-session-chip-label">Active Pool</span>
+                                <strong>{pageRemainingCount}</strong>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isHistoryMode && overallScores && (
                         <div className="wr-overall-summary">
                             <div className="wr-summary-stats">
                                 <div className="wr-summary-stat">
@@ -338,72 +450,111 @@ const WordReading = () => {
                         </div>
                     )}
 
-                    <WordGrid
-                        words={pageWords}
-                        baseIndex={pageStart}
-                        wordResults={wordResults}
-                        pendingDeletions={pendingDeletions}
-                        selectedWordIndex={selectedWordIndex}
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        pageStart={pageStart}
-                        pageEnd={pageEnd}
-                        totalWords={allWords.length}
-                        onWordClick={setSelectedWordIndex}
-                        onToggleDelete={toggleDelete}
-                        onPrevPage={handlePrevPage}
-                        onNextPage={handleNextPage}
-                    />
+                    {isHistoryMode ? (
+                        <div className="wr-history-list">
+                            {historyWords.length === 0 ? (
+                                <div className="wr-history-empty">
+                                    <p>还没有读错的词，先练习几句再回来看看。</p>
+                                </div>
+                            ) : (
+                                historyWords.slice(0, 40).map((entry, index) => (
+                                    <button
+                                        key={`${entry.id}-${index}`}
+                                        type="button"
+                                        className={`wr-history-item ${historySelectedId === entry.id ? 'active' : ''}`}
+                                        onClick={() => setHistorySelectedId(entry.id)}
+                                    >
+                                        <div className="wr-history-item-main">
+                                            <span className="wr-history-word">{entry.word}</span>
+                                            <span
+                                                className="wr-history-score"
+                                                style={{ color: getScoreColor(entry.accuracy ?? 0) }}
+                                            >
+                                                {Math.round(entry.accuracy ?? 0)}%
+                                            </span>
+                                        </div>
+                                        <div className="wr-history-meta">
+                                            <span>{entry.source}</span>
+                                            <span>{formatTimestamp(entry.timestamp)}</span>
+                                        </div>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            <WordGrid
+                                words={pageWords}
+                                baseIndex={pageStart}
+                                wordResults={wordResults}
+                                pendingDeletions={pendingDeletions}
+                                selectedWordIndex={selectedWordIndex}
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                pageStart={pageStart}
+                                pageEnd={pageEnd}
+                                totalWords={allWords.length}
+                                onWordClick={setSelectedWordIndex}
+                                onToggleDelete={toggleDelete}
+                                onPrevPage={handlePrevPage}
+                                onNextPage={handleNextPage}
+                            />
 
-                    {/* Batch Record Button */}
-                    <div className="wr-recording-section">
-                        <button
-                            className={`wr-record-btn ${isRecording ? 'recording' : ''}`}
-                            onClick={handleBatchRecord}
-                            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-                        >
-                            <div className="wr-record-btn-inner">
-                                <svg className="wr-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                    <line x1="12" y1="19" x2="12" y2="23" />
-                                    <line x1="8" y1="23" x2="16" y2="23" />
-                                </svg>
-                                {isRecording && <div className="wr-recording-pulse"></div>}
+                            {/* Batch Record Button */}
+                            <div className="wr-recording-section">
+                                <button
+                                    className={`wr-record-btn ${isRecording ? 'recording' : ''}`}
+                                    onClick={handleBatchRecord}
+                                    aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+                                >
+                                    <div className="wr-record-btn-inner">
+                                        <svg className="wr-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                            <line x1="12" y1="19" x2="12" y2="23" />
+                                            <line x1="8" y1="23" x2="16" y2="23" />
+                                        </svg>
+                                        {isRecording && <div className="wr-recording-pulse"></div>}
+                                    </div>
+                                </button>
+                                <p className="wr-record-hint">
+                                    {isRecording ? 'Listening… press Space to stop' : 'Space to assess the full page'}
+                                </p>
                             </div>
-                        </button>
-                        <p className="wr-record-hint">
-                            {isRecording ? 'Listening… press Space to stop' : 'Space to assess the full page'}
-                        </p>
-                    </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Right: Detail Panel */}
                 <div className="wr-right">
-                    {selectedWord ? (
+                    {detailWord ? (
                         <WordDetail
-                            word={selectedWord}
-                            wordResult={selectedResult}
-                            onRecordResult={handleSingleRecordResult}
-                            onPrevWord={() => selectRelativeWord(-1)}
-                            onNextWord={() => selectRelativeWord(1)}
-                            hasPrev={selectedWordIndex > pageStart}
-                            hasNext={selectedWordIndex !== null && selectedWordIndex < pageEnd - 1}
-                            onClose={() => setSelectedWordIndex(null)}
+                            word={detailWord}
+                            wordResult={detailResult}
+                            onRecordResult={isHistoryMode ? handleHistoryRecordResult : handleSingleRecordResult}
+                            onPrevWord={isHistoryMode ? undefined : () => selectRelativeWord(-1)}
+                            onNextWord={isHistoryMode ? undefined : () => selectRelativeWord(1)}
+                            hasPrev={detailHasPrev}
+                            hasNext={detailHasNext}
+                            onClose={handleDetailClose}
                         />
                     ) : (
                         <div className="wr-welcome-state">
                             <div className="wr-welcome-icon">✨</div>
-                            <h2 className="wr-welcome-title">Select a word to begin</h2>
+                            <h2 className="wr-welcome-title">
+                                {isHistoryMode ? 'Pick a history word' : 'Select a word to begin'}
+                            </h2>
                             <p className="wr-welcome-desc">
-                                Choose a word from the left to start your focused pronunciation training.
+                                {welcomeMessage}
                             </p>
-                            <div className="wr-keyboard-hints">
-                                <div className="wr-kbd-hint"><kbd>Space</kbd> Batch Read</div>
-                                <div className="wr-kbd-hint"><kbd>←</kbd><kbd>→</kbd> Turn Page</div>
-                                <div className="wr-kbd-hint"><kbd>↑</kbd><kbd>↓</kbd> Move Focus</div>
-                                <div className="wr-kbd-hint"><kbd>Esc</kbd> Close Detail</div>
-                            </div>
+                            {!isHistoryMode && (
+                                <div className="wr-keyboard-hints">
+                                    <div className="wr-kbd-hint"><kbd>Space</kbd> Batch Read</div>
+                                    <div className="wr-kbd-hint"><kbd>←</kbd><kbd>→</kbd> Turn Page</div>
+                                    <div className="wr-kbd-hint"><kbd>↑</kbd><kbd>↓</kbd> Move Focus</div>
+                                    <div className="wr-kbd-hint"><kbd>Esc</kbd> Close Detail</div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

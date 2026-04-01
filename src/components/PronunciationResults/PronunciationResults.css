@@ -206,33 +206,65 @@
 
 
 .text-playback-area {
-    line-height: 2.2;
-    padding: 1.25rem;
-    background: var(--bg-card);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), var(--bg-card));
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    font-size: 1.125rem;
+    border: 1px solid rgba(92, 74, 54, 0.1);
+    min-height: 120px;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
 }
 
 .text-word {
     cursor: pointer;
-    border-radius: 4px;
-    padding: 2px 4px;
-    margin: 0;
-    display: inline-block;
-    transition: background 0.2s;
-    font-weight: 500;
+    border-radius: 999px;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.85);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .text-word:hover {
-    background: rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+    border-color: rgba(0, 0, 0, 0.14);
 }
 
-.text-word.word-correct { color: var(--success); }
-.text-word.word-warning { color: var(--warning); border-bottom: 2px solid var(--warning); }
-.text-word.word-error { color: var(--error); border-bottom: 2px solid var(--error); font-weight: bold; }
-.text-word.word-omission { color: var(--text-tertiary); text-decoration: line-through; opacity: 0.6; }
-.text-word.word-insertion { color: var(--info); border-bottom: 2px dashed var(--info); }
+.text-word.word-correct {
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.08);
+}
+.text-word.word-warning {
+    color: var(--warning);
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.12);
+}
+.text-word.word-error {
+    color: var(--error);
+    border-color: rgba(239, 68, 68, 0.45);
+    background: rgba(239, 68, 68, 0.12);
+    font-weight: 700;
+}
+.text-word.word-omission {
+    color: var(--text-tertiary);
+    border-color: rgba(92, 74, 54, 0.2);
+    background: rgba(239, 68, 68, 0.05);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+.text-word.word-insertion {
+    color: var(--info);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.1);
+}
 
 .perfect-message {
     padding: 1.5rem;

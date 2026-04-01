@@ -3,7 +3,12 @@ import useAzureSpeech from '../../utils/useAzureSpeech';
 import { getIPA } from '../../utils/ipaMap';
 import './PronunciationResults.css';
 
-const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Assessment" }) => {
+const PronunciationResults = ({
+    pronunciationResult,
+    title = "Pronunciation Assessment",
+    modeLabel = "Reading",
+    onProblemWordsCaptured
+}) => {
     const { isRecording: isWordRecording, isProcessing: processingWord, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
     const [recordingWordIndex, setRecordingWordIndex] = useState(null);
     const [wordPracticeResults, setWordPracticeResults] = useState({});
@@ -101,6 +106,8 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
     const hasNextProblemWord = selectedProblemPosition >= 0 && selectedProblemPosition < problemWordIndices.length - 1;
 
     // Auto-save "Needs Improvement" words once per day (per unique word).
+    const problemWordsSnapshotRef = useRef('');
+
     useEffect(() => {
         if (!pronunciationResult) return;
         if (!problemWordIndices || problemWordIndices.length === 0) return;
@@ -138,6 +145,26 @@ const PronunciationResults = ({ pronunciationResult, title = "Pronunciation Asse
             });
         });
     }, [pronunciationResult, problemWordIndices, allWords]);
+
+    useEffect(() => {
+        if (!onProblemWordsCaptured) return;
+        if (!problemWords || problemWords.length === 0) return;
+        const snapshot = problemWords
+            .map(w => w.word?.toLowerCase().trim() || '')
+            .sort()
+            .join(',');
+        if (!snapshot || snapshot === problemWordsSnapshotRef.current) return;
+        problemWordsSnapshotRef.current = snapshot;
+        onProblemWordsCaptured(
+            problemWords.map((word) => ({
+                word: word.word,
+                accuracy: Math.round(word.accuracyScore),
+                errorType: word.errorType,
+                phonemes: word.phonemes || [],
+                source: modeLabel
+            }))
+        );
+    }, [problemWords, onProblemWordsCaptured, modeLabel]);
 
     useEffect(() => {
         if (problemWordIndices.length === 0) {

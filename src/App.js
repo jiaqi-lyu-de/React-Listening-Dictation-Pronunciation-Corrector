@@ -7,7 +7,8 @@ import DiffHistory from './components/DiffHistory/DiffHistory';
 import WordSidebar from './components/WordSidebar/WordSidebar';
 import ManualPronunciation from './components/ManualPronunciation/ManualPronunciation';
 import PronunciationResults from './components/PronunciationResults/PronunciationResults';
-import { useState, useRef } from 'react';
+import WordReading from './components/WordReading/WordReading';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 function App() {
   const [text, setText] = useState('');
@@ -16,7 +17,48 @@ function App() {
   const [audioFileName, setAudioFileName] = useState('');
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [appMode, setAppMode] = useState('dictation');
+  const [problemWordHistory, setProblemWordHistory] = useState(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const stored = window.localStorage.getItem('problemWordHistory');
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('Failed to load problem word history:', error);
+      return [];
+    }
+  });
   const replayRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('problemWordHistory', JSON.stringify(problemWordHistory));
+  }, [problemWordHistory]);
+
+  const captureProblemWords = useCallback((words, source = 'Reading') => {
+    if (!words || words.length === 0) return;
+    setProblemWordHistory((prev) => {
+      const next = [...prev];
+      const seenKeys = new Set(prev.map((entry) => `${entry.word?.toLowerCase() || ''}|${entry.source}`));
+      words.forEach((word) => {
+        if (!word?.word) return;
+        const normalized = word.word.trim();
+        if (!normalized) return;
+        const key = `${normalized.toLowerCase()}|${source}`;
+        if (seenKeys.has(key)) return;
+        seenKeys.add(key);
+        next.unshift({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          word: normalized,
+          accuracy: word.accuracy ?? 0,
+          errorType: word.errorType,
+          phonemes: word.phonemes,
+          source,
+          timestamp: new Date().toISOString()
+        });
+      });
+      return next.slice(0, 80);
+    });
+  }, []);
 
   const handleText = (text) => {
     setText(text);
@@ -175,7 +217,7 @@ function App() {
                         onNext={handleNext}
                         onCheck={handleReplay}
                         onReplayAudio={handleReplayAudio}
-                          onPronunciationResult={setPronunciationResult}
+                        onPronunciationResult={setPronunciationResult}
                       />
                     </div>
                   </div>
@@ -193,11 +235,15 @@ function App() {
                     />
                   </aside>
 
-                    {pronunciationResult && (
-                      <div className="dictation-results">
-                        <PronunciationResults pronunciationResult={pronunciationResult} />
-                      </div>
-                    )}
+                  {pronunciationResult && (
+                    <div className="dictation-results">
+                      <PronunciationResults
+                        pronunciationResult={pronunciationResult}
+                        modeLabel="Dictation Playback"
+                        onProblemWordsCaptured={(problemWords) => captureProblemWords(problemWords, 'Dictation')}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <section className="empty-workspace">
@@ -224,8 +270,14 @@ function App() {
           )}
 
           {appMode === 'sentence' && (
-            <ManualPronunciation />
+            <ManualPronunciation
+              onProblemWordsCaptured={(problemWords) => captureProblemWords(problemWords, 'Sentence Reading')}
+            />
           )}
+
+          <section className="word-reading-area">
+            <WordReading historyWords={problemWordHistory} />
+          </section>
         </div>
       </div>
     </div>
