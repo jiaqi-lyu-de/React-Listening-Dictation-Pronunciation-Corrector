@@ -52,6 +52,24 @@
     color: var(--text-primary);
 }
 
+.reference-section.locked {
+    position: relative;
+    overflow: hidden;
+}
+
+.reference-text.is-obscured {
+    filter: blur(10px);
+    user-select: none;
+    pointer-events: none;
+}
+
+.reference-lock-hint {
+    margin-top: 0.55rem;
+    color: var(--text-tertiary);
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
 .reference-audio-btn {
     padding: 0.75rem 1rem;
     background: rgba(18, 54, 41, 0.08);
@@ -298,7 +316,7 @@ kbd {
     background: rgba(255, 255, 255, 0.82);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    font-family: 'IBM Plex Mono', 'SF Mono', 'Monaco', 'Courier New', monospace;
+    font-family: SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--accent-primary);
@@ -514,7 +532,7 @@ kbd {
 .phoneme-item,
 .mini-phoneme {
     font-size: 0.75rem;
-    font-family: 'IBM Plex Mono', 'SF Mono', 'Monaco', 'Courier New', monospace;
+    font-family: SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
     font-weight: 600;
     padding: 0 0.2rem;
     border-radius: 2px;

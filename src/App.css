@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-
 :root {
     --bg-primary: #f4efe7;
     --bg-secondary: #fbf8f3;
@@ -46,7 +44,7 @@
 }
 
 body {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans GB", -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -160,12 +158,12 @@ body::before {
 }
 
 .app-title {
-    font-size: clamp(2.3rem, 5vw, 4.4rem);
+    font-size: clamp(2rem, 4.2vw, 3.6rem);
     line-height: 1.04;
     font-weight: 800;
     color: var(--accent-deep);
-    max-width: 12ch;
-    animation: fadeInDown 0.6s ease;
+    max-width: 14ch;
+    text-wrap: balance;
 }
 
 .app-subtitle {
@@ -173,7 +171,6 @@ body::before {
     font-size: clamp(1rem, 1.8vw, 1.2rem);
     font-weight: 500;
     max-width: 62ch;
-    animation: fadeInUp 0.6s ease;
 }
 
 .app-container {
@@ -284,33 +281,34 @@ body::before {
 }
 
 .dictation-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.dictation-top-row {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.9fr);
-    grid-template-rows: auto auto;
-    grid-template-areas:
-        "main side"
-        "results results";
     gap: 1.5rem;
-    align-items: start;
+    align-items: stretch;
 }
 
-.dictation-main {
-    grid-area: main;
-}
-
-.dictation-side {
-    grid-area: side;
-}
-
-.dictation-results {
-    grid-area: results;
+.dictation-main,
+.dictation-side,
+.dictation-history {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .dictation-main,
 .dictation-side {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    min-height: 0;
+}
+
+.dictation-side {
+    height: 760px;
+    overflow: hidden;
 }
 
 .empty-workspace {
@@ -346,7 +344,7 @@ body::before {
     border-radius: 50%;
     background: var(--accent-deep);
     color: white;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, monospace;
     font-size: 0.88rem;
     font-weight: 600;
 }
@@ -451,13 +449,12 @@ body::before {
         grid-template-columns: 1fr;
     }
 
-    .dictation-layout {
+    .dictation-top-row {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-        grid-template-areas:
-            "main"
-            "side"
-            "results";
+    }
+
+    .dictation-side {
+        height: auto;
     }
 
     .mode-spotlight {

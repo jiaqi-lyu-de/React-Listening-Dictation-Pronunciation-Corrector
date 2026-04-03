@@ -3,7 +3,15 @@ import SpeechAssessor from '../SpeechAssessor/SpeechAssessor';
 import './DiffCom.css';
 import { diffWords } from 'diff';
 
-const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio, onPronunciationResult }) => {
+const DiffCom = ({
+  text,
+  number,
+  onNext,
+  onCheck,
+  onReplayAudio,
+  onPronunciationResult,
+  isReferenceUnlocked = false
+}) => {
   const [userInput, setUserInput] = useState('');
   const [diff, setDiff] = useState([]);
   const [accuracy, setAccuracy] = useState(null);
@@ -147,14 +155,22 @@ const DiffCom = ({ text, number, onNext, onCheck, onReplayAudio, onPronunciation
     if (!part.added && !part.removed) acc.correct += wordCount;
     return acc;
   }, { correct: 0, missed: 0, extra: 0 });
+  const referencePlaceholder = originalText
+    ? '完成当前句听写并点击 Check Answer 后，这里才会显示原句。'
+    : 'Load audio to begin sentence-by-sentence dictation.';
 
   return (
     <div className="diff-container">
-      <div className="reference-section">
+      <div className={`reference-section ${isReferenceUnlocked ? 'unlocked' : 'locked'}`}>
         <div className="reference-header">
           <div>
             <span className="input-title">Reference Sentence</span>
-            <p className="reference-text">{originalText || 'Load audio to begin sentence-by-sentence dictation.'}</p>
+            <p className={`reference-text ${isReferenceUnlocked ? '' : 'is-obscured'}`}>
+              {isReferenceUnlocked ? originalText : (originalText || referencePlaceholder)}
+            </p>
+            {!isReferenceUnlocked && originalText && (
+              <p className="reference-lock-hint">{referencePlaceholder}</p>
+            )}
           </div>
           <button className="reference-audio-btn" onClick={onReplayAudio}>
             Replay Audio

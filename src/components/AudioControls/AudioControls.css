@@ -252,13 +252,6 @@
     text-transform: uppercase;
 }
 
-.current-sentence-card {
-    padding: 1.2rem 1.25rem;
-    background: rgba(255, 255, 255, 0.48);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-}
-
 .current-sentence-header {
     display: flex;
     justify-content: space-between;
@@ -288,6 +281,18 @@
     font-size: 1.08rem;
     line-height: 1.75;
     color: var(--text-primary);
+}
+
+.current-sentence-text.is-obscured {
+    filter: blur(10px);
+    user-select: none;
+}
+
+.current-sentence-hint {
+    margin-top: 0.55rem;
+    color: var(--text-tertiary);
+    font-size: 0.84rem;
+    font-weight: 700;
 }
 
 .playback-controls {
@@ -345,6 +350,7 @@
 }
 
 @media (max-width: 880px) {
+
     .method-selector,
     .audio-session-meta {
         grid-template-columns: 1fr;

@@ -3,10 +3,17 @@ import { fetchAPI } from '../../utils/fetch';
 import HistorySelector from '../HistorySelector/HistorySelector';
 import './AudioControls.css';
 
-const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioNameChange, audioFileName }) => {
+const AudioControls = ({
+  handleText,
+  number,
+  handleNum,
+  text,
+  onReplay,
+  onAudioNameChange,
+  audioFileName
+}) => {
   const [loading, setLoading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
   const [transcriptionMethod, setTranscriptionMethod] = useState("whisper-node");
   const [isFullPlaying, setIsFullPlaying] = useState(false);
@@ -61,7 +68,6 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
         // 如果当前播放时间超过了句子的结束时间
         if (audio.currentTime >= endTime) {
           audio.pause();
-          setIsPlaying(false);
           audio.currentTime = endTime;
         }
       }
@@ -138,7 +144,6 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
     setIsFullPlaying(true);
     if (audioRef.current) {
       audioRef.current.play();
-      setIsPlaying(true);
     }
   };
 
@@ -149,7 +154,6 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
       const startTime = timeToSeconds(startTimeStr);
       audioRef.current.currentTime = startTime;
       audioRef.current.play();
-      setIsPlaying(true);
     }
   }, [number, text]);
 
@@ -176,8 +180,6 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
   }, [number, text, onReplay, replaySentence]);
 
   const totalSentences = text?.transcript?.length || 0;
-  const currentSentence = text?.transcript?.[number];
-
   const handleResetSession = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -188,7 +190,6 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
     }
     setAudioUrl(null);
     setError(null);
-    setIsPlaying(false);
     setIsFullPlaying(false);
     handleText('');
     if (onAudioNameChange) {
@@ -300,23 +301,8 @@ const AudioControls = ({ handleText, number, handleNum, text, onReplay, onAudioN
               ref={audioRef}
               src={audioUrl}
               onTimeUpdate={handleTimeUpdate}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onEnded={() => setIsPlaying(false)}
             />
           </div>
-
-          {currentSentence?.speech && (
-            <div className="current-sentence-card">
-              <div className="current-sentence-header">
-                <span className="section-kicker">Current Sentence</span>
-                <span className={`playback-status ${isPlaying ? 'live' : ''}`}>
-                  {isPlaying ? 'Playing' : 'Ready'}
-                </span>
-              </div>
-              <p className="current-sentence-text">{currentSentence.speech}</p>
-            </div>
-          )}
 
           <div className="playback-controls">
             <button

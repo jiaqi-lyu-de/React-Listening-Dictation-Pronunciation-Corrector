@@ -8,7 +8,7 @@ import WordSidebar from './components/WordSidebar/WordSidebar';
 import ManualPronunciation from './components/ManualPronunciation/ManualPronunciation';
 import PronunciationResults from './components/PronunciationResults/PronunciationResults';
 import WordReading from './components/WordReading/WordReading';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 
 const PROBLEM_HISTORY_STORAGE_KEYS = {
   Dictation: 'problemWordHistoryDictation',
@@ -143,6 +143,10 @@ function App() {
   const completionRate = totalSentences > 0
     ? Math.round((practicedSentences / totalSentences) * 100)
     : 0;
+  const unlockedSentenceNumbers = useMemo(
+    () => new Set(diffHistory.map((item) => item.sentenceNumber)),
+    [diffHistory]
+  );
 
   const modes = [
     {
@@ -237,37 +241,36 @@ function App() {
 
               {text && totalSentences > 0 ? (
                 <div className="dictation-layout">
-                  <div className="dictation-main">
-                    <ProgressBar
-                      current={number}
-                      total={totalSentences}
-                      accuracy={overallAccuracy}
-                    />
-
-                    <div className="practice-section">
-                      <DiffCom
-                        text={text}
-                        number={number}
-                        onNext={handleNext}
-                        onCheck={handleReplay}
-                        onReplayAudio={handleReplayAudio}
-                        onPronunciationResult={setPronunciationResult}
+                  <div className="dictation-top-row">
+                    <div className="dictation-main">
+                      <ProgressBar
+                        current={number}
+                        total={totalSentences}
+                        accuracy={overallAccuracy}
                       />
+
+                      <div className="practice-section">
+                        <DiffCom
+                          text={text}
+                          number={number}
+                          onNext={handleNext}
+                          onCheck={handleReplay}
+                          onReplayAudio={handleReplayAudio}
+                          onPronunciationResult={setPronunciationResult}
+                          isReferenceUnlocked={unlockedSentenceNumbers.has(number)}
+                        />
+                      </div>
                     </div>
+
+                    <aside className="dictation-side">
+                      <Transcripts
+                        text={text?.transcript}
+                        currentNumber={number}
+                        onSentenceClick={handleSentenceClick}
+                        unlockedSentenceNumbers={unlockedSentenceNumbers}
+                      />
+                    </aside>
                   </div>
-
-                  <aside className="dictation-side">
-                    <Transcripts
-                      text={text?.transcript}
-                      currentNumber={number}
-                      onSentenceClick={handleSentenceClick}
-                    />
-
-                    <DiffHistory
-                      history={diffHistory}
-                      audioFileName={audioFileName}
-                    />
-                  </aside>
 
                   {pronunciationResult && (
                     <div className="dictation-results">
@@ -278,6 +281,13 @@ function App() {
                       />
                     </div>
                   )}
+
+                  <div className="dictation-history">
+                    <DiffHistory
+                      history={diffHistory}
+                      audioFileName={audioFileName}
+                    />
+                  </div>
                 </div>
               ) : (
                 <section className="empty-workspace">
