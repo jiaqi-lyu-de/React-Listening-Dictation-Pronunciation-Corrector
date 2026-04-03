@@ -10,6 +10,22 @@ import PronunciationResults from './components/PronunciationResults/Pronunciatio
 import WordReading from './components/WordReading/WordReading';
 import { useState, useRef, useEffect, useCallback } from 'react';
 
+const PROBLEM_HISTORY_STORAGE_KEYS = {
+  Dictation: 'problemWordHistoryDictation',
+  'Sentence Reading': 'problemWordHistorySentenceReading',
+};
+
+const loadProblemWordHistory = (storageKey) => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = window.localStorage.getItem(storageKey);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error(`Failed to load problem word history for ${storageKey}:`, error);
+    return [];
+  }
+};
+
 function App() {
   const [text, setText] = useState('');
   const [number, setNumber] = useState(0);
@@ -17,26 +33,37 @@ function App() {
   const [audioFileName, setAudioFileName] = useState('');
   const [pronunciationResult, setPronunciationResult] = useState(null);
   const [appMode, setAppMode] = useState('dictation');
-  const [problemWordHistory, setProblemWordHistory] = useState(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = window.localStorage.getItem('problemWordHistory');
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('Failed to load problem word history:', error);
-      return [];
-    }
-  });
+  const [dictationProblemWordHistory, setDictationProblemWordHistory] = useState(() =>
+    loadProblemWordHistory(PROBLEM_HISTORY_STORAGE_KEYS.Dictation)
+  );
+  const [sentenceProblemWordHistory, setSentenceProblemWordHistory] = useState(() =>
+    loadProblemWordHistory(PROBLEM_HISTORY_STORAGE_KEYS['Sentence Reading'])
+  );
   const replayRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem('problemWordHistory', JSON.stringify(problemWordHistory));
-  }, [problemWordHistory]);
+    window.localStorage.setItem(
+      PROBLEM_HISTORY_STORAGE_KEYS.Dictation,
+      JSON.stringify(dictationProblemWordHistory)
+    );
+  }, [dictationProblemWordHistory]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(
+      PROBLEM_HISTORY_STORAGE_KEYS['Sentence Reading'],
+      JSON.stringify(sentenceProblemWordHistory)
+    );
+  }, [sentenceProblemWordHistory]);
 
   const captureProblemWords = useCallback((words, source = 'Reading') => {
     if (!words || words.length === 0) return;
-    setProblemWordHistory((prev) => {
+    const setHistory = source === 'Dictation'
+      ? setDictationProblemWordHistory
+      : setSentenceProblemWordHistory;
+
+    setHistory((prev) => {
       const next = [...prev];
       const seenKeys = new Set(prev.map((entry) => `${entry.word?.toLowerCase() || ''}|${entry.source}`));
       words.forEach((word) => {
@@ -196,7 +223,7 @@ function App() {
         </section>
 
         <div className="main-content">
-          {appMode === 'dictation' && (
+          <section className={`mode-panel ${appMode === 'dictation' ? 'active' : 'hidden'}`}>
             <>
               <AudioControls
                 handleText={handleText}
@@ -274,17 +301,20 @@ function App() {
 
               <WordSidebar />
             </>
-          )}
+          </section>
 
-          {appMode === 'sentence' && (
+          <section className={`mode-panel ${appMode === 'sentence' ? 'active' : 'hidden'}`}>
             <ManualPronunciation
               onProblemWordsCaptured={(problemWords) => captureProblemWords(problemWords, 'Sentence Reading')}
             />
-          )}
+          </section>
 
-          {appMode === 'word-reading' && (
-            <WordReading historyWords={problemWordHistory} />
-          )}
+          <section className={`mode-panel ${appMode === 'word-reading' ? 'active' : 'hidden'}`}>
+            <WordReading
+              dictationHistoryWords={dictationProblemWordHistory}
+              sentenceHistoryWords={sentenceProblemWordHistory}
+            />
+          </section>
 
         </div>
       </div>

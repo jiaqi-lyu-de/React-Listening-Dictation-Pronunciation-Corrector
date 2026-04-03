@@ -3,8 +3,8 @@
    Adapted from wordd/style.css with wr- prefix
    ======================================== */
 
-/* ---- Module Variables ---- */
-.wr-container {
+/* ---- Module Variables (legacy support) ---- */
+.word-assessment {
   --wr-bg-app: #f4f7f9;
   --wr-bg-sidebar: #ffffff;
   --wr-bg-panel: #ffffff;
@@ -27,11 +27,6 @@
   --wr-color-error-bg: rgba(239, 68, 68, 0.1);
 }
 
-/* ---- Layout ---- */
-.wr-container {
-  width: 100%;
-}
-
 .wr-loading {
   display: flex;
   align-items: center;
@@ -41,25 +36,8 @@
   color: var(--wr-text-secondary);
 }
 
-.wr-layout {
-  display: flex;
-  gap: 0;
-  min-height: 600px;
-  background: var(--wr-bg-app);
-  border-radius: var(--radius-lg, 16px);
-  overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-}
-
 /* ---- Left Panel (Sidebar) ---- */
-.wr-left {
-  width: 360px;
-  min-width: 360px;
-  background: var(--wr-bg-sidebar);
-  border-right: 1px solid var(--wr-border-default);
-  display: flex;
-  flex-direction: column;
-}
+/* No more .wr-left, it's .word-list-sidebar inside .needs-improvement-layout now */
 
 .wr-session-bar {
   display: grid;
@@ -103,6 +81,20 @@
 .wr-mode-tabs {
   display: flex;
   gap: 6px;
+}
+
+.wr-history-picker {
+  position: relative;
+}
+
+.wr-history-btn {
+  min-width: 180px;
+  justify-content: center;
+}
+
+.wr-history-dropdown {
+  right: 0;
+  left: auto;
 }
 
 .wr-mode-btn {
@@ -153,13 +145,17 @@
   color: var(--wr-text-muted);
 }
 
-/* ---- Right Panel (Main) ---- */
-.wr-right {
-  flex: 1;
-  overflow-y: auto;
-  background: var(--wr-bg-app);
-  padding: 32px;
+.wr-history-empty-state {
+  margin: 0 20px 20px;
+  padding: 28px 20px;
+  border: 1px dashed var(--wr-border-default);
+  border-radius: 18px;
+  color: var(--wr-text-secondary);
+  background: var(--wr-bg-card);
+  text-align: center;
 }
+
+/* .wr-right is now .word-practice-panel */
 
 /* ---- Overall Summary ---- */
 .wr-overall-summary {
@@ -885,28 +881,14 @@
 
 /* ---- Responsive ---- */
 @media (max-width: 900px) {
-  .wr-layout {
-    flex-direction: column;
+  .needs-improvement-layout {
+    grid-template-columns: 1fr;
     min-height: auto;
-  }
-  .wr-left {
-    width: 100%;
-    min-width: auto;
-    max-height: 50vh;
-  }
-  .wr-right {
-    padding: 20px;
   }
 }
 
 @media (max-width: 640px) {
   .wr-session-bar {
     grid-template-columns: 1fr;
-  }
-
-  .wr-detail-actions,
-  .wr-keyboard-hints {
-    flex-direction: column;
-    align-items: stretch;
   }
 }

@@ -7,7 +7,8 @@ const PronunciationResults = ({
     pronunciationResult,
     title = "Pronunciation Assessment",
     modeLabel = "Reading",
-    onProblemWordsCaptured
+    onProblemWordsCaptured,
+    isProblemOnly = false
 }) => {
     const { isRecording: isWordRecording, isProcessing: processingWord, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
     const [recordingWordIndex, setRecordingWordIndex] = useState(null);
@@ -185,6 +186,117 @@ const PronunciationResults = ({
     };
 
     if (!pronunciationResult) return null;
+
+    if (isProblemOnly) {
+        return (
+            <div className="word-assessment">
+                <div className="needs-improvement-layout">
+                    <div className="word-list word-list-sidebar">
+                        {problemWords.map((word) => {
+                            const index = word.sourceIndex;
+                            const practiceResult = wordPracticeResults[index];
+                            const currentAccuracy = practiceResult
+                                ? practiceResult.pronunciationAssessment.accuracyScore
+                                : word.accuracyScore;
+                            const currentErrorType = practiceResult?.words?.[0]?.errorType || word.errorType;
+
+                            return (
+                                <div
+                                    key={index}
+                                    className={`word-details word-details-button ${selectedProblemWordIndex === index ? 'active' : ''}`}
+                                    onClick={() => selectProblemWord(index, word.word)}
+                                    role="button"
+                                    tabIndex={0}
+                                >
+                                    <div className="word-details-top">
+                                        <span
+                                            className={`word-item ${getWordClass(currentErrorType, currentAccuracy)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
+                                            title={`Accuracy: ${Math.round(currentAccuracy)}%`}
+                                        >
+                                            {word.word}
+                                        </span>
+                                        <span className={`word-details-accuracy-badge ${getScoreClass(currentAccuracy)}`}>
+                                            {Math.round(currentAccuracy)}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {selectedProblemWord && (
+                        <div className="word-practice-panel">
+                            <div className="word-practice-header">
+                                <div>
+                                    <p className="word-practice-kicker">Focused practice</p>
+                                    <div className="word-practice-title-row">
+                                        <h5 className="word-practice-title">{selectedProblemWord.word}</h5>
+                                        <span className={`word-practice-score ${getScoreClass(selectedProblemWord.accuracyScore)}`}>
+                                            {Math.round(selectedProblemWord.accuracyScore)}%
+                                        </span>
+                                    </div>
+                                    <p className="word-practice-status">{getWordStatusLabel(selectedProblemWord)}</p>
+                                </div>
+                                <div className="word-practice-actions">
+                                    <button type="button" className="word-practice-action-btn" onClick={() => speakWord(selectedProblemWord.word)}>Listen</button>
+                                    <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>Prev</button>
+                                    <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>Next</button>
+                                </div>
+                            </div>
+
+                            <div className="word-practice-body">
+                                <section className="word-practice-card">
+                                    <h6 className="word-practice-card-title">Pronunciation</h6>
+                                    <div className="word-practice-recorder">
+                                        <button
+                                            type="button"
+                                            className={`word-practice-record-btn ${recordingWordIndex === selectedProblemWordIndex ? 'recording' : ''}`}
+                                            onClick={() => runWordAssessment(selectedProblemWord.word, selectedProblemWordIndex)}
+                                            disabled={processingWord}
+                                        >
+                                            <svg className="word-practice-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                                <line x1="12" y1="19" x2="12" y2="23" />
+                                                <line x1="8" y1="23" x2="16" y2="23" />
+                                            </svg>
+                                        </button>
+                                        <p className="word-practice-hint">
+                                            {recordingWordIndex === selectedProblemWordIndex ? 'Recording...' : 'Record'}
+                                        </p>
+                                    </div>
+
+                                    {selectedPracticeResult?.words?.[0]?.phonemes && (
+                                        <div className="word-practice-phoneme-results" style={{ marginTop: '1rem' }}>
+                                            {selectedPracticeResult.words[0].phonemes.map((phoneme, index) => (
+                                                <div key={index} className={`word-practice-phoneme-chip ${getPhonemeClass(phoneme.accuracyScore)}`}>
+                                                    <span>{getIPA(phoneme.phoneme)}</span>
+                                                    <span className="word-practice-phoneme-score">{Math.round(phoneme.accuracyScore)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+                                <section className="word-practice-card">
+                                    <h6 className="word-practice-card-title">Details</h6>
+                                    <div className="word-practice-summary-grid">
+                                        <div className="word-practice-summary-item">
+                                            <span className="word-practice-summary-label">Accuracy</span>
+                                            <strong>{Math.round(selectedProblemWord.accuracyScore)}%</strong>
+                                        </div>
+                                        <div className="word-practice-summary-item">
+                                            <span className="word-practice-summary-label">Error</span>
+                                            <strong>{selectedProblemWord.errorType}</strong>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="pronunciation-results">

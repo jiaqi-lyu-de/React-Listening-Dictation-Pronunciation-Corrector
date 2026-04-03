@@ -275,6 +275,10 @@ body::before {
     animation: fadeIn 0.8s ease;
 }
 
+.mode-panel.hidden {
+    display: none;
+}
+
 .word-reading-area {
     margin-top: 2rem;
 }

@@ -1,35 +1,37 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import useAzureSpeech from '../../utils/useAzureSpeech';
-import WordGrid from './WordGrid';
-import WordDetail from './WordDetail';
+import PronunciationResults from '../PronunciationResults/PronunciationResults';
+import '../PronunciationResults/PronunciationResults.css';
+import '../HistorySelector/HistorySelector.css';
 import './WordReading.css';
 
 const PAGE_SIZE = 30;
-
-const getScoreColor = (score) => {
-    if (score >= 80) return 'var(--success, #10b981)';
-    if (score >= 60) return 'var(--warning, #f59e0b)';
-    return 'var(--error, #ef4444)';
-};
+const HISTORY_SOURCES = [
+    { key: 'Dictation', label: '听力部分' },
+    { key: 'Sentence Reading', label: '句子阅读' }
+];
 
 /**
  * WordReading — Main container for the Word Reading module.
  * Migrated from wordd project. Uses useAzureSpeech for all speech interactions.
  */
-const WordReading = ({ historyWords = [] }) => {
+const WordReading = ({
+    dictationHistoryWords = [],
+    sentenceHistoryWords = []
+}) => {
     const [allWords, setAllWords] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [wordResults, setWordResults] = useState(new Map());
     const [pendingDeletions, setPendingDeletions] = useState(new Set());
     const [selectedWordIndex, setSelectedWordIndex] = useState(null);
-    const [overallScores, setOverallScores] = useState(null);
     const [toast, setToast] = useState('');
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState('page');
-    const [historySelectedId, setHistorySelectedId] = useState(null);
-    const [historyWordResults, setHistoryWordResults] = useState(new Map());
+    const [historySource, setHistorySource] = useState('Dictation');
+    const [historySelections, setHistorySelections] = useState({});
+    const [historyMenuOpen, setHistoryMenuOpen] = useState(false);
 
     const segmentsRef = useRef([]);
+    const historyMenuRef = useRef(null);
     const { isRecording, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
     const formatTimestamp = useCallback((value) => {
         if (!value) return '';
@@ -65,27 +67,22 @@ const WordReading = ({ historyWords = [] }) => {
         loadWords();
     }, [showToast]);
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (historyMenuRef.current && !historyMenuRef.current.contains(event.target)) {
+                setHistoryMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     // Derived values
     const totalPages = Math.max(1, Math.ceil(allWords.length / PAGE_SIZE));
     const pageStart = currentPage * PAGE_SIZE;
     const pageEnd = Math.min(pageStart + PAGE_SIZE, allWords.length);
     const pageWords = allWords.slice(pageStart, pageEnd);
-    const pageScoredCount = pageWords.reduce((count, _, i) => count + (wordResults.has(pageStart + i) ? 1 : 0), 0);
-    const pagePendingDeleteCount = pageWords.reduce((count, _, i) => count + (pendingDeletions.has(pageStart + i) ? 1 : 0), 0);
-    const pageRemainingCount = Math.max(0, pageWords.length - pagePendingDeleteCount);
-
-    // Toggle delete mark
-    const toggleDelete = useCallback((absIdx) => {
-        setPendingDeletions(prev => {
-            const next = new Set(prev);
-            if (next.has(absIdx)) {
-                next.delete(absIdx);
-            } else {
-                next.add(absIdx);
-            }
-            return next;
-        });
-    }, []);
 
     // Persist deletions to server
     const persistDeletions = useCallback(async () => {
@@ -148,7 +145,6 @@ const WordReading = ({ historyWords = [] }) => {
         await persistDeletions();
         setCurrentPage(prev => Math.max(0, prev - 1));
         setWordResults(new Map());
-        setOverallScores(null);
         setSelectedWordIndex(null);
     }, [currentPage, persistDeletions]);
 
@@ -158,7 +154,6 @@ const WordReading = ({ historyWords = [] }) => {
         const newMax = Math.max(1, Math.ceil(allWords.length / PAGE_SIZE)) - 1;
         setCurrentPage(prev => Math.min(newMax, prev + 1));
         setWordResults(new Map());
-        setOverallScores(null);
         setSelectedWordIndex(null);
     }, [currentPage, totalPages, allWords.length, persistDeletions]);
 
@@ -168,7 +163,6 @@ const WordReading = ({ historyWords = [] }) => {
             // Stop
             stopContinuousAssessment(segmentsRef.current).then(overall => {
                 if (overall) {
-                    setOverallScores(overall);
                     showToast('Page assessment complete');
                 }
             });
@@ -183,7 +177,6 @@ const WordReading = ({ historyWords = [] }) => {
             const referenceText = assessmentWords.map(w => w.word).join(' ');
             segmentsRef.current = [];
             setWordResults(new Map());
-            setOverallScores(null);
             setSelectedWordIndex(null);
             showToast('Started page assessment');
 
@@ -227,23 +220,6 @@ const WordReading = ({ historyWords = [] }) => {
     }, [isRecording, pageWords, pageStart, pendingDeletions, showToast,
         startContinuousAssessment, stopContinuousAssessment, recordLowScore]);
 
-    // Single word record result
-    const handleSingleRecordResult = useCallback((result) => {
-        if (selectedWordIndex === null) return;
-        setWordResults(prev => {
-            const next = new Map(prev);
-            next.set(selectedWordIndex, result);
-            return next;
-        });
-
-        // Record low score
-        if (result.accuracy <= 80) {
-            const word = allWords[selectedWordIndex];
-            const phonemes = result.wordGroups?.flatMap(g => g.phonemes) || [];
-            recordLowScore(word?.word, result.accuracy, phonemes);
-        }
-    }, [selectedWordIndex, allWords, recordLowScore]);
-
     const selectRelativeWord = useCallback((direction) => {
         if (pageWords.length === 0) return;
 
@@ -285,285 +261,208 @@ const WordReading = ({ historyWords = [] }) => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleBatchRecord, handlePrevPage, handleNextPage, selectRelativeWord]);
 
-    useEffect(() => {
-        if (viewMode !== 'history') return;
-        if (historyWords.length === 0) {
-            setHistorySelectedId(null);
-            return;
-        }
-        setHistorySelectedId((prev) => (prev && historyWords.some(entry => entry.id === prev)) ? prev : historyWords[0].id);
-    }, [historyWords, viewMode]);
+    const historyWordsBySource = useMemo(() => ({
+        Dictation: dictationHistoryWords,
+        'Sentence Reading': sentenceHistoryWords
+    }), [dictationHistoryWords, sentenceHistoryWords]);
+
+    const groupedHistoryBySource = useMemo(() => {
+        const buildGroups = (entries) => {
+            const grouped = new Map();
+            entries.forEach((entry) => {
+                const timestamp = entry.timestamp || new Date().toISOString();
+                const dateKey = timestamp.slice(0, 10);
+                if (!grouped.has(dateKey)) {
+                    grouped.set(dateKey, {
+                        id: dateKey,
+                        dateKey,
+                        timestamp,
+                        words: []
+                    });
+                }
+                grouped.get(dateKey).words.push(entry);
+            });
+
+            return Array.from(grouped.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+        };
+
+        return {
+            Dictation: buildGroups(historyWordsBySource.Dictation || []),
+            'Sentence Reading': buildGroups(historyWordsBySource['Sentence Reading'] || [])
+        };
+    }, [historyWordsBySource]);
+
+    const activeHistoryGroups = groupedHistoryBySource[historySource] || [];
+    const selectedHistoryDate = historySelections[historySource] || null;
+    const selectedHistoryGroup = activeHistoryGroups.find(group => group.id === selectedHistoryDate) || activeHistoryGroups[0] || null;
 
     useEffect(() => {
-        if (viewMode === 'page') {
-            setHistorySelectedId(null);
-        }
-    }, [viewMode]);
+        setHistorySelections((prev) => {
+            const next = { ...prev };
 
-    const selectedWord = selectedWordIndex !== null ? allWords[selectedWordIndex] : null;
-    const selectedResult = selectedWordIndex !== null ? wordResults.get(selectedWordIndex) : null;
-    const isHistoryMode = viewMode === 'history';
-    const historyDetailEntry = historySelectedId ? historyWords.find(entry => entry.id === historySelectedId) : null;
-    const dictionaryMatch = historyDetailEntry
-        ? allWords.find(word => word.word?.toLowerCase() === historyDetailEntry.word?.toLowerCase())
-        : null;
-    const historyDetailWord = historyDetailEntry
-        ? { ...(dictionaryMatch || {}), word: historyDetailEntry.word }
-        : null;
-    const baseHistoryResult = historyDetailEntry
-        ? {
-            accuracy: historyDetailEntry.accuracy,
-            wordGroups: historyDetailEntry.phonemes?.length
-                ? [{
-                    word: historyDetailEntry.word,
-                    phonemes: historyDetailEntry.phonemes
-                }]
-                : undefined
-        }
-        : null;
-    const historyDetailResult = historyDetailEntry
-        ? (historyWordResults.get(historyDetailEntry.id) || baseHistoryResult)
-        : null;
-    const detailWord = isHistoryMode ? historyDetailWord : selectedWord;
-    const detailResult = isHistoryMode ? historyDetailResult : selectedResult;
-    const detailHasPrev = !isHistoryMode && selectedWordIndex > pageStart;
-    const detailHasNext = !isHistoryMode && selectedWordIndex !== null && selectedWordIndex < pageEnd - 1;
-    const welcomeMessage = isHistoryMode
-        ? '在历史词单中选择一个读错的单词继续练习。'
-        : 'Choose a word from the left to start your focused pronunciation training.';
-    const handleHistoryRecordResult = useCallback((result) => {
-        if (!historyDetailEntry) return;
-        setHistoryWordResults((prev) => {
-            const next = new Map(prev);
-            next.set(historyDetailEntry.id, result);
+            HISTORY_SOURCES.forEach(({ key }) => {
+                const groups = groupedHistoryBySource[key] || [];
+                if (groups.length === 0) {
+                    delete next[key];
+                    return;
+                }
+
+                const currentSelection = prev[key];
+                const hasSelection = currentSelection && groups.some(group => group.id === currentSelection);
+                if (!hasSelection) {
+                    next[key] = groups[0].id;
+                }
+            });
+
             return next;
         });
-    }, [historyDetailEntry]);
-    const handleDetailClose = useCallback(() => {
-        if (isHistoryMode) {
-            setHistorySelectedId(null);
-        } else {
-            setSelectedWordIndex(null);
-        }
-    }, [isHistoryMode]);
+    }, [groupedHistoryBySource]);
+
+    const handleSelectHistoryDate = useCallback((dateKey) => {
+        setHistorySelections((prev) => ({
+            ...prev,
+            [historySource]: dateKey
+        }));
+        setHistoryMenuOpen(false);
+    }, [historySource]);
+
+    const historyPronunciationResult = useMemo(() => {
+        const words = (selectedHistoryGroup?.words || []).map(entry => {
+            const dictionaryMatch = allWords.find(word => word.word?.toLowerCase() === entry.word?.toLowerCase());
+            return {
+                word: entry.word,
+                accuracyScore: entry.accuracy ?? 0,
+                errorType: (entry.accuracy ?? 0) < 80 ? 'Mispronunciation' : 'None',
+                phonemes: entry.phonemes || [],
+                ...dictionaryMatch // Include dictionary info
+            };
+        });
+
+        return {
+            pronunciationAssessment: {
+                accuracyScore: 0,
+                fluencyScore: 0,
+                completenessScore: 0,
+                pronunciationScore: 0
+            },
+            words
+        };
+    }, [selectedHistoryGroup, allWords]);
+
+    const historySummary = useMemo(() => {
+        if (!selectedHistoryGroup) return null;
+        const count = selectedHistoryGroup.words.length;
+        const average = count > 0
+            ? Math.round(selectedHistoryGroup.words.reduce((sum, entry) => sum + (entry.accuracy ?? 0), 0) / count)
+            : 0;
+        return {
+            count,
+            average
+        };
+    }, [selectedHistoryGroup]);
+
+    const formatHistoryDate = useCallback((dateKey) => {
+        if (!dateKey) return '选择日期';
+        const parsed = new Date(`${dateKey}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) return dateKey;
+        return parsed.toLocaleDateString('zh-CN', {
+            month: 'long',
+            day: 'numeric'
+        });
+    }, []);
 
     if (loading) {
         return (
-            <div className="wr-container">
+            <div className="word-assessment">
                 <div className="wr-loading">Loading word list...</div>
             </div>
         );
     }
 
     return (
-        <div className="wr-container">
-            <div className="wr-layout">
-                {/* Left: Word Grid + Controls */}
-                <div className="wr-left">
-                    <div className="wr-mode-control">
-                        <div className="wr-mode-label">Word Pool</div>
-                        <div className="wr-mode-tabs">
-                            <button
-                                type="button"
-                                className={`wr-mode-btn ${!isHistoryMode ? 'active' : ''}`}
-                                onClick={() => setViewMode('page')}
-                                aria-pressed={!isHistoryMode}
-                            >
-                                This Page
-                            </button>
-                            <button
-                                type="button"
-                                className={`wr-mode-btn ${isHistoryMode ? 'active' : ''}`}
-                                onClick={() => setViewMode('history')}
-                                aria-pressed={isHistoryMode}
-                            >
-                                History
-                            </button>
-                        </div>
-                    </div>
+        <div className="word-assessment">
+            <h4 className="word-title">{'History Word Pool'}</h4>
 
-                    {isHistoryMode ? (
-                        <div className="wr-history-summary">
-                            <div className="wr-history-chip">
-                                <span className="wr-history-label">Saved history</span>
-                                <strong>{historyWords.length}</strong>
-                            </div>
-                            <div className="wr-history-chip">
-                                <span className="wr-history-label">Latest capture</span>
-                                <strong>{historyWords[0]?.word ?? '—'}</strong>
-                                {historyWords[0] && (
-                                    <span className="wr-history-subtext">
-                                        {formatTimestamp(historyWords[0].timestamp)}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="wr-session-bar">
-                            <div className="wr-session-chip">
-                                <span className="wr-session-chip-label">This Page</span>
-                                <strong>{pageWords.length} words</strong>
-                            </div>
-                            <div className="wr-session-chip">
-                                <span className="wr-session-chip-label">Scored</span>
-                                <strong>{pageScoredCount}</strong>
-                            </div>
-                            <div className="wr-session-chip">
-                                <span className="wr-session-chip-label">Pending Delete</span>
-                                <strong>{pagePendingDeleteCount}</strong>
-                            </div>
-                            <div className="wr-session-chip">
-                                <span className="wr-session-chip-label">Active Pool</span>
-                                <strong>{pageRemainingCount}</strong>
-                            </div>
-                        </div>
-                    )}
-
-                    {!isHistoryMode && overallScores && (
-                        <div className="wr-overall-summary">
-                            <div className="wr-summary-stats">
-                                <div className="wr-summary-stat">
-                                    <span className="wr-summary-stat-value" style={{ color: getScoreColor(overallScores.accuracy) }}>
-                                        {Math.round(overallScores.accuracy)}
-                                    </span>
-                                    <span className="wr-summary-stat-label">Acc</span>
-                                </div>
-                                <div className="wr-summary-stat">
-                                    <span className="wr-summary-stat-value" style={{ color: getScoreColor(overallScores.fluency) }}>
-                                        {Math.round(overallScores.fluency)}
-                                    </span>
-                                    <span className="wr-summary-stat-label">Flu</span>
-                                </div>
-                                <div className="wr-summary-stat">
-                                    <span className="wr-summary-stat-value" style={{ color: getScoreColor(overallScores.completeness) }}>
-                                        {Math.round(overallScores.completeness)}
-                                    </span>
-                                    <span className="wr-summary-stat-label">Comp</span>
-                                </div>
-                                <div className="wr-summary-stat">
-                                    <span className="wr-summary-stat-value" style={{ color: getScoreColor(overallScores.pronScore) }}>
-                                        {Math.round(overallScores.pronScore)}
-                                    </span>
-                                    <span className="wr-summary-stat-label">Pron</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {isHistoryMode ? (
-                        <div className="wr-history-list">
-                            {historyWords.length === 0 ? (
-                                <div className="wr-history-empty">
-                                    <p>还没有读错的词，先练习几句再回来看看。</p>
-                                </div>
-                            ) : (
-                                historyWords.slice(0, 40).map((entry, index) => (
-                                    <button
-                                        key={`${entry.id}-${index}`}
-                                        type="button"
-                                        className={`wr-history-item ${historySelectedId === entry.id ? 'active' : ''}`}
-                                        onClick={() => setHistorySelectedId(entry.id)}
-                                    >
-                                        <div className="wr-history-item-main">
-                                            <span className="wr-history-word">{entry.word}</span>
-                                            <span
-                                                className="wr-history-score"
-                                                style={{ color: getScoreColor(entry.accuracy ?? 0) }}
-                                            >
-                                                {Math.round(entry.accuracy ?? 0)}%
-                                            </span>
-                                        </div>
-                                        <div className="wr-history-meta">
-                                            <span>{entry.source}</span>
-                                            <span>{formatTimestamp(entry.timestamp)}</span>
-                                        </div>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    ) : (
-                        <>
-                            <WordGrid
-                                words={pageWords}
-                                baseIndex={pageStart}
-                                wordResults={wordResults}
-                                pendingDeletions={pendingDeletions}
-                                selectedWordIndex={selectedWordIndex}
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                pageStart={pageStart}
-                                pageEnd={pageEnd}
-                                totalWords={allWords.length}
-                                onWordClick={setSelectedWordIndex}
-                                onToggleDelete={toggleDelete}
-                                onPrevPage={handlePrevPage}
-                                onNextPage={handleNextPage}
-                            />
-
-                            {/* Batch Record Button */}
-                            <div className="wr-recording-section">
-                                <button
-                                    className={`wr-record-btn ${isRecording ? 'recording' : ''}`}
-                                    onClick={handleBatchRecord}
-                                    aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-                                >
-                                    <div className="wr-record-btn-inner">
-                                        <svg className="wr-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                            <line x1="12" y1="19" x2="12" y2="23" />
-                                            <line x1="8" y1="23" x2="16" y2="23" />
-                                        </svg>
-                                        {isRecording && <div className="wr-recording-pulse"></div>}
-                                    </div>
-                                </button>
-                                <p className="wr-record-hint">
-                                    {isRecording ? 'Listening… press Space to stop' : 'Space to assess the full page'}
-                                </p>
-                            </div>
-                        </>
-                    )}
+            <div className="wr-mode-control" style={{ marginBottom: '1rem' }}>
+                <div className="wr-mode-tabs">
+                    {HISTORY_SOURCES.map((source) => (
+                        <button
+                            key={source.key}
+                            type="button"
+                            className={`wr-mode-btn ${historySource === source.key ? 'active' : ''}`}
+                            onClick={() => setHistorySource(source.key)}
+                        >
+                            {source.label}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Right: Detail Panel */}
-                <div className="wr-right">
-                    {detailWord ? (
-                        <WordDetail
-                            word={detailWord}
-                            wordResult={detailResult}
-                            onRecordResult={isHistoryMode ? handleHistoryRecordResult : handleSingleRecordResult}
-                            onPrevWord={isHistoryMode ? undefined : () => selectRelativeWord(-1)}
-                            onNextWord={isHistoryMode ? undefined : () => selectRelativeWord(1)}
-                            hasPrev={detailHasPrev}
-                            hasNext={detailHasNext}
-                            onClose={handleDetailClose}
-                        />
-                    ) : (
-                        <div className="wr-welcome-state">
-                            <div className="wr-welcome-icon">✨</div>
-                            <h2 className="wr-welcome-title">
-                                {isHistoryMode ? 'Pick a history word' : 'Select a word to begin'}
-                            </h2>
-                            <p className="wr-welcome-desc">
-                                {welcomeMessage}
-                            </p>
-                            {!isHistoryMode && (
-                                <div className="wr-keyboard-hints">
-                                    <div className="wr-kbd-hint"><kbd>Space</kbd> Batch Read</div>
-                                    <div className="wr-kbd-hint"><kbd>←</kbd><kbd>→</kbd> Turn Page</div>
-                                    <div className="wr-kbd-hint"><kbd>↑</kbd><kbd>↓</kbd> Move Focus</div>
-                                    <div className="wr-kbd-hint"><kbd>Esc</kbd> Close Detail</div>
-                                </div>
+                <div className="wr-history-picker" ref={historyMenuRef}>
+                    <button
+                        type="button"
+                        className="history-btn wr-history-btn"
+                        onClick={() => setHistoryMenuOpen((prev) => !prev)}
+                    >
+                        {selectedHistoryGroup ? `📜 ${formatHistoryDate(selectedHistoryGroup.dateKey)}` : '📭 暂无历史'}
+                    </button>
+
+                    {historyMenuOpen && (
+                        <div className="history-dropdown wr-history-dropdown">
+                            {activeHistoryGroups.length === 0 ? (
+                                <div className="history-empty">📭 No history found</div>
+                            ) : (
+                                <ul className="history-list">
+                                    {activeHistoryGroups.map((group) => (
+                                        <li key={group.id} onClick={() => handleSelectHistoryDate(group.id)}>
+                                            <span className="history-name">{formatHistoryDate(group.dateKey)}</span>
+                                            <span className="history-date">{group.words.length} words</span>
+                                        </li>
+                                    ))}
+                                </ul>
                             )}
                         </div>
                     )}
                 </div>
             </div>
 
+            {historySummary && (
+                <div className="wr-history-summary">
+                    <div className="wr-history-chip">
+                        <span className="wr-history-label">Date</span>
+                        <strong>{formatHistoryDate(selectedHistoryGroup?.dateKey)}</strong>
+                        <span className="wr-history-subtext">{formatTimestamp(selectedHistoryGroup?.timestamp)}</span>
+                    </div>
+                    <div className="wr-history-chip">
+                        <span className="wr-history-label">Words</span>
+                        <strong>{historySummary.count}</strong>
+                        <span className="wr-history-subtext">{historySource}</span>
+                    </div>
+                    <div className="wr-history-chip">
+                        <span className="wr-history-label">Average</span>
+                        <strong>{historySummary.average}%</strong>
+                        <span className="wr-history-subtext">Needs improvement pool</span>
+                    </div>
+                </div>
+            )}
+
+            {selectedHistoryGroup ? (
+                <PronunciationResults
+                    key={`${historySource}-${selectedHistoryGroup.id}`}
+                    pronunciationResult={historyPronunciationResult}
+                    isProblemOnly={true}
+                    modeLabel={historySource}
+                />
+            ) : (
+                <div className="wr-history-empty-state">
+                    当前来源下还没有历史错误单词，先回到听力部分或句子阅读完成一次评测。
+                </div>
+            )}
+
             {/* Toast */}
             {toast && <div className="wr-toast show">{toast}</div>}
         </div>
     );
 };
+
 
 export default WordReading;

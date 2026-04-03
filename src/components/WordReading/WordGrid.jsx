@@ -51,7 +51,7 @@ const WordGrid = ({
                 <div className="wr-page-info">
                     <span className="wr-page-label">Page {currentPage + 1} / {totalPages}</span>
                     <span className="wr-page-range">
-                        {totalWords > 0 ? `Words ${pageStart + 1}–${pageEnd}` : 'No words'}
+                        {totalWords > 0 ? `${pageStart + 1}–${pageEnd}` : 'No words'}
                     </span>
                 </div>
                 <button
@@ -74,22 +74,26 @@ const WordGrid = ({
                         const result = wordResults.get(absIdx);
                         const isDeleted = pendingDeletions.has(absIdx);
                         const score = result ? Math.round(result.accuracy) : null;
-                        const level = score !== null ? getScoreLevel(score) : '';
+                        const scoreClass = score >= 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
+                        const wordClass = score >= 80 ? 'word-correct' : score >= 60 ? 'word-warning' : (score !== null ? 'word-error' : '');
 
                         return (
                             <div
                                 key={absIdx}
-                                className={`wr-word-chip ${result ? 'scored' : ''} ${level} ${isDeleted ? 'deleted' : ''} ${selectedWordIndex === absIdx ? 'active' : ''}`}
-                                data-index={absIdx}
+                                className={`word-details word-details-button ${isDeleted ? 'deleted' : ''} ${selectedWordIndex === absIdx ? 'active' : ''}`}
                                 onClick={() => {
                                     playWord(item.word);
                                     onWordClick(absIdx);
                                 }}
                             >
-                                <span className="wr-word-chip-text">{item.word}</span>
-                                <div className="wr-word-chip-right">
+                                <div className="word-details-top">
+                                    <span className={`word-item ${wordClass}`}>
+                                        {item.word}
+                                    </span>
                                     {score !== null && (
-                                        <span className="wr-word-chip-score">{score}</span>
+                                        <span className={`word-details-accuracy-badge ${scoreClass}`}>
+                                            {score}
+                                        </span>
                                     )}
                                     <span
                                         className="wr-word-chip-delete"
