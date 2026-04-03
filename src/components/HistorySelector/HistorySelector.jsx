@@ -6,9 +6,11 @@ const HistorySelector = ({ onSelect }) => {
     const [historyFiles, setHistoryFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const loadHistory = async () => {
         setLoading(true);
+        setErrorMessage('');
         try {
             const data = await fetchAPI('history', 'GET');
             if (data.success) {
@@ -16,6 +18,7 @@ const HistorySelector = ({ onSelect }) => {
             }
         } catch (error) {
             console.error('Failed to load history:', error);
+            setErrorMessage('Unable to load history right now.');
         } finally {
             setLoading(false);
         }
@@ -28,6 +31,7 @@ const HistorySelector = ({ onSelect }) => {
     }, [isOpen]);
 
     const handleSelect = async (filename) => {
+        setErrorMessage('');
         try {
             const data = await fetchAPI(`history/${filename}`, 'GET');
             if (onSelect) {
@@ -46,7 +50,7 @@ const HistorySelector = ({ onSelect }) => {
             }
         } catch (error) {
             console.error('Failed to load history item:', error);
-            alert('Failed to load history item');
+            setErrorMessage('Unable to restore this history item.');
         }
     };
 
@@ -60,6 +64,8 @@ const HistorySelector = ({ onSelect }) => {
                 <div className="history-dropdown">
                     {loading ? (
                         <div className="history-loading">⏳ Loading history...</div>
+                    ) : errorMessage ? (
+                        <div className="history-error">{errorMessage}</div>
                     ) : historyFiles.length === 0 ? (
                         <div className="history-empty">📭 No history found</div>
                     ) : (

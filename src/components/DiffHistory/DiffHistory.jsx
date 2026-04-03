@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './DiffHistory.css';
 
 const DiffHistory = ({ history, audioFileName, onExport }) => {
+    const [exportStatus, setExportStatus] = useState('');
+
     const handleExport = () => {
         if (!history || history.length === 0) {
-            alert('No diff history to export');
+            setExportStatus('There is no practice history to export yet.');
             return;
         }
 
@@ -46,6 +48,7 @@ const DiffHistory = ({ history, audioFileName, onExport }) => {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        setExportStatus(`Exported ${history.length} sentence${history.length !== 1 ? 's' : ''}.`);
     };
 
     if (!history || history.length === 0) {
@@ -70,6 +73,12 @@ const DiffHistory = ({ history, audioFileName, onExport }) => {
                     📥 Export All Diffs
                 </button>
             </div>
+
+            {exportStatus && (
+                <div className="diff-history-status">
+                    {exportStatus}
+                </div>
+            )}
 
             <div className="diff-history-list">
                 {history.map((item, index) => (

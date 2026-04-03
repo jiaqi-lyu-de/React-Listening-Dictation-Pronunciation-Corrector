@@ -6,6 +6,8 @@ const WordSidebar = () => {
     const [words, setWords] = useState([]);
     const [saving, setSaving] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('');
+    const [statusTone, setStatusTone] = useState('neutral');
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -27,15 +29,27 @@ const WordSidebar = () => {
     const addWord = (word) => {
         setWords(prev => {
             if (prev.some(w => w.toLowerCase() === word.toLowerCase())) {
+                setStatusTone('neutral');
+                setStatusMessage(`"${word}" is already in your list.`);
                 return prev;
             }
             setIsVisible(true);
+            setStatusTone('success');
+            setStatusMessage(`Added "${word}" to the vocabulary list.`);
             return [...prev, word];
         });
     };
 
     const removeWord = (index) => {
-        setWords(prev => prev.filter((_, i) => i !== index));
+        setWords(prev => {
+            const removed = prev[index];
+            const next = prev.filter((_, i) => i !== index);
+            if (removed) {
+                setStatusTone('neutral');
+                setStatusMessage(`Removed "${removed}" from the list.`);
+            }
+            return next;
+        });
     };
 
     const saveWords = async () => {
@@ -44,11 +58,14 @@ const WordSidebar = () => {
         setSaving(true);
         try {
             await fetchAPI('save-words', 'POST', { body: { words } });
+            setStatusTone('success');
+            setStatusMessage(`Saved ${words.length} word${words.length > 1 ? 's' : ''} to vocabulary.`);
             setWords([]);
             setIsVisible(false);
         } catch (error) {
             console.error('Error saving words:', error);
-            alert('Error saving words.');
+            setStatusTone('error');
+            setStatusMessage(error.message || 'Unable to save vocabulary right now.');
         } finally {
             setSaving(false);
         }
@@ -106,6 +123,11 @@ const WordSidebar = () => {
                 </div>
 
                 <div className="sidebar-footer">
+                    {statusMessage && (
+                        <div className={`sidebar-status ${statusTone}`}>
+                            {statusMessage}
+                        </div>
+                    )}
                     <button
                         className="save-btn"
                         onClick={saveWords}
