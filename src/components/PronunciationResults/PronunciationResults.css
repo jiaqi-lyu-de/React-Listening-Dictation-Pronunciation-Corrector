@@ -2,7 +2,7 @@
     background: var(--bg-secondary);
     border: 2px solid var(--accent-primary);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
+    padding: var(--space-card);
     margin-top: 1rem;
     animation: popIn 0.4s ease;
 }
@@ -271,7 +271,7 @@
 }
 
 .perfect-message {
-    padding: 1.5rem;
+    padding: var(--space-card);
     text-align: center;
     background: rgba(16, 185, 129, 0.1);
     border-radius: var(--radius-md);
@@ -371,7 +371,7 @@
 
 .word-practice-panel {
     min-width: 0;
-    padding: 1.35rem 1.5rem;
+    padding: var(--space-card-tight) var(--space-card);
     background: linear-gradient(180deg, rgba(255, 250, 243, 0.96) 0%, rgba(247, 240, 231, 0.92) 100%);
     border: 1px solid rgba(92, 74, 54, 0.12);
     border-radius: var(--radius-lg);
@@ -427,23 +427,8 @@
 
 .word-practice-action-btn {
     padding: 0.7rem 0.95rem;
-    border-radius: 12px;
-    border: 1px solid rgba(92, 74, 54, 0.14);
-    background: rgba(255, 255, 255, 0.85);
-    color: var(--text-primary);
     font-weight: 700;
     cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.word-practice-action-btn:hover:not(:disabled) {
-    border-color: rgba(178, 91, 42, 0.45);
-    color: var(--accent-primary);
-}
-
-.word-practice-action-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
 }
 
 .word-practice-body {
@@ -456,7 +441,7 @@
     background: rgba(255, 255, 255, 0.78);
     border: 1px solid rgba(92, 74, 54, 0.08);
     border-radius: 18px;
-    padding: 1rem;
+    padding: var(--space-card-tight);
 }
 
 .word-practice-card-title {
@@ -625,7 +610,7 @@
     gap: 0.25rem;
     flex-wrap: wrap;
     padding: 0.2rem 0.4rem;
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(178, 91, 42, 0.06);
     border-radius: 6px;
     border: 1px solid var(--border-color);
 }
@@ -636,8 +621,8 @@
     padding: 0 0.3rem;
     border-radius: 3px;
     letter-spacing: 0.5px;
-    background: white;
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: var(--surface-strong);
+    border: 1px solid rgba(178, 91, 42, 0.18);
 }
 
 .phoneme-list {

@@ -165,10 +165,10 @@ const ManualPronunciation = ({ onProblemWordsCaptured }) => {
                     rows={4}
                 />
                 <div className="button-group">
-                    <button className="btn-apply" onClick={handleApplyText} disabled={!inputText.trim()}>
+                    <button className="btn-apply ui-btn-primary" onClick={handleApplyText} disabled={!inputText.trim()}>
                         Apply Text
                     </button>
-                    <button className="btn-clear" onClick={clearText} disabled={!inputText && !displayText}>
+                    <button className="btn-clear ui-btn-secondary" onClick={clearText} disabled={!inputText && !displayText}>
                         Clear
                     </button>
                 </div>
@@ -198,10 +198,10 @@ const ManualPronunciation = ({ onProblemWordsCaptured }) => {
                     </div>
 
                     <div className="mp-selection-actions">
-                        <button className="mp-selection-btn" onClick={handleUseFullText}>
+                        <button className="mp-selection-btn ui-btn-secondary" onClick={handleUseFullText}>
                             Practice Full Text
                         </button>
-                        <button className="mp-selection-btn" onClick={handleCopySelection} disabled={!selectedText}>
+                        <button className="mp-selection-btn ui-btn-secondary" onClick={handleCopySelection} disabled={!selectedText}>
                             Copy Selection
                         </button>
                         <span className="mp-shortcut-tip"><kbd>Esc</kbd> clear selection</span>

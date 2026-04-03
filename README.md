@@ -1,50 +1,114 @@
-<h1 align="center">React Listening Dictation & Pronunciation Corrector 🎧</h1>
+# React Listening Dictation & Pronunciation Corrector
 
-<p align="center">
-  <em>An intelligent English listening dictation and precise pronunciation correction tool.</em><br/>
-  <em>一款智能的英语听力听写与精准发音纠正评估工具。</em>
-</p>
+An AI-assisted English listening and pronunciation training workspace built with React, Azure Speech SDK, and a lightweight Node backend.
 
-<p align="center">
-  <a href="#english">English</a> •
-  <a href="#中文">中文</a>
-</p>
+一款用于英语精听、听写、跟读和问题词复盘的训练工作台，基于 React、Azure Speech SDK 和 Node.js 构建。
 
----
+## Overview
 
-<h2 id="english">🇬🇧 English Documentation</h2>
+This project combines three learning loops in a single interface:
 
-### 📖 Introduction
+- `Dictation Studio`: upload audio, replay sentence by sentence, type what you hear, and compare against the reference text
+- `Sentence Reading`: paste arbitrary text, assess pronunciation for the full passage or a highlighted fragment
+- `Word Review`: revisit problem words captured from different practice modes and focus on repeated weak spots
 
-**React Listening Dictation & Pronunciation Corrector** is an AI-powered application designed specifically for English learners. It perfectly combines listening dictation practice with professional-grade, phoneme-level pronunciation correction and assessment. By comparing the user's spoken input with the original audio/text, this tool helps users identify specific pronunciation errors and gracefully correct them to improve their English fluency.
+It is designed as a local-first demo project for showcasing:
 
-### ✨ Key Features
+- real-time browser speech assessment with Azure Speech SDK over websocket
+- multi-mode language-learning UX in a single-page React app
+- lightweight backend support for transcription, history persistence, and word storage
 
-- **🎧 Listening & Dictation**: Import your own audio files and practice dictation sentence by sentence.
-- **📝 Text Diff Comparison**: Accurately compares user input against the reference text, highlighting missing, extra, and incorrect words.
-- **🎙️ Pronunciation Assessment**: Integrated with Azure Cognitive Services (Speech SDK) to provide detailed feedback on accuracy, fluency, completeness, and prosody down to the phoneme level.
-- **📊 History Tracking**: Automatically saves your practice history, allowing you to review your learning progress anytime.
-- **📚 Vocabulary Book**: Save unfamiliar words during practice for future review.
+## Why This Project Stands Out
 
-### 🛠️ Tech Stack
+- It is not just a speech demo. It connects transcription, dictation feedback, pronunciation scoring, and review loops into one workflow.
+- Pronunciation assessment runs in the browser with Azure Speech SDK, which keeps interaction latency low for repeated speaking practice.
+- Listening history, problem words, and word review are tied together, so the app supports iterative learning instead of one-off API calls.
+- The UI is intentionally product-shaped rather than tutorial-shaped: mode switching, history restore, focused practice panels, and review surfaces are all integrated.
 
-- **Frontend**: React.js, Vanilla CSS, Web Speech API (if applicable)
-- **Backend**: Node.js, Express.js
-- **AI & Speech**: Microsoft Azure Cognitive Services (Speech SDK), OpenAI Whisper (via whisper-node)
-- **Audio Processing**: FFmpeg, fluent-ffmpeg
+## Showcase Highlights
 
-### 🚀 Getting Started
+### 1. Dictation Workflow
 
-#### Prerequisites
+- Upload audio and transcribe it with `whisper-node` or `whisperx`
+- Replay sentence audio quickly while typing your answer
+- Unlock the original sentence only after answering
+- Inspect diff feedback, pronunciation results, and per-session history
 
-- [Node.js](https://nodejs.org/) (v18 or higher recommended)
-- An **Azure Speech Service** subscription key
-- `ffmpeg` installed and available in your shell `PATH`
-- Optional for `whisperx` mode: `python3` plus `whisperx`
+### 2. Pronunciation Feedback
 
-#### 1. Environment Configuration
+- Uses Azure Speech SDK in the frontend for low-latency websocket recognition
+- Returns word-level and phoneme-level scoring
+- Supports both full-sentence reading and focused single-word practice
 
-Create a root `.env` file from `.env.example`:
+### 3. Review System
+
+- Captures problematic words from dictation and sentence-reading separately
+- Stores review history by date
+- Lets users re-open historical weak-word sets for targeted repetition
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[React UI] --> B[Mode Switching / Practice Flows]
+    B --> C[Azure Speech SDK in Browser]
+    B --> D[Node / Express Backend]
+    D --> E[Whisper / WhisperX Transcription]
+    D --> F[Local JSON Storage]
+    F --> G[History]
+    F --> H[Word Pool]
+    F --> I[Attempts]
+```
+
+### Runtime Responsibilities
+
+- `Frontend`
+  - dictation interaction
+  - sentence reading interaction
+  - low-latency pronunciation assessment with Azure Speech SDK
+  - review and word-practice UI
+- `Backend`
+  - audio upload and transcription
+  - local history persistence
+  - centralized word storage
+  - practice attempt logging
+
+## Tech Stack
+
+- `Frontend`: React 19, vanilla CSS, browser media APIs
+- `Speech`: Azure Cognitive Services Speech SDK
+- `Backend`: Node.js, Express
+- `Transcription`: whisper-node, optional whisperx
+- `Audio tooling`: ffmpeg, fluent-ffmpeg
+- `Persistence`: local JSON files under `back_node/db`
+
+## Project Structure
+
+```text
+├── back_node/
+│   ├── db/                  # local storage for words, history, attempts, uploads
+│   ├── router_handler/      # transcription and persistence handlers
+│   └── index.js             # backend entry
+├── src/
+│   ├── components/          # feature UI components
+│   ├── utils/               # shared hooks and network helpers
+│   ├── App.js               # app shell and mode orchestration
+│   └── App.css              # global product styling
+└── public/
+```
+
+## Local Setup
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) `v18+`
+- an Azure Speech resource
+- `ffmpeg` available in your shell `PATH`
+- optional for `whisperx` mode: `python3` and `whisperx`
+
+### Environment Variables
+
+Create root `.env` from `.env.example`:
 
 ```env
 REACT_APP_API_BASE_URL=http://127.0.0.1:8888
@@ -52,154 +116,113 @@ REACT_APP_AZURE_SPEECH_KEY=your_azure_speech_key_here
 REACT_APP_AZURE_SPEECH_REGION=your_azure_region_here
 ```
 
-Then create `back_node/.env` from `back_node/.env.example`:
+Create `back_node/.env` from `back_node/.env.example`:
 
 ```env
 PORT=8888
 ```
 
-Notes:
-
-- Pronunciation assessment uses the browser Azure Speech SDK for lower-latency websocket streaming, so the `REACT_APP_AZURE_SPEECH_*` values are required in the frontend environment.
-- The backend is only used for transcription, history, and word storage.
-- `whisperx` mode additionally requires a Python environment where `python3 -m whisperx` works.
-
-#### 2. Dependencies Setup
+### Install
 
 ```bash
-# Install frontend dependencies (root directory)
 npm install
-
-# Install backend dependencies
-cd back_node
-npm install
-cd ..
+cd back_node && npm install && cd ..
 ```
 
-#### 3. Run the Application
-
-From the root directory, run:
+### Run
 
 ```bash
 npm run dev
 ```
 
-The frontend will run at `http://localhost:3000` and the backend at `http://localhost:8888`.
+- frontend: `http://localhost:3000`
+- backend: `http://localhost:8888`
 
-### ⚠️ Demo / Deployment Note
+## Demo Notes
 
-This repo is currently optimized for local demo use. It assumes a separately running backend plus local system dependencies such as `ffmpeg`, and the browser-based Azure Speech SDK requires frontend environment variables for pronunciation assessment.
+- This repository is optimized for local demonstration and portfolio review.
+- Because pronunciation assessment uses the browser Azure SDK, frontend Azure env vars are required during local development.
+- The backend is intentionally lightweight and stores data locally for easier demo setup.
 
-### 📂 Project Structure
+## Suggested Portfolio Additions
 
-```text
-├── back_node/         # Node.js Backend
-│   ├── db/            # Local JSON database & file storage (uploads/history)
-│   ├── router_handler/# Express route handlers & logic
-│   └── index.js       # Backend entry point
-├── src/               # React Frontend
-│   ├── components/    # Reusable UI components (DiffCom, HistorySelector, etc.)
-│   └── App.js         # Frontend entry point
-└── public/            # Static assets
-```
+If you are using this repository in interviews or GitHub portfolio reviews, the next improvements with the highest presentation value are:
 
-### 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+1. add screenshots or a short demo GIF for all three modes
+2. add one architecture image or annotated interaction flow
+3. add a short section on engineering tradeoffs, especially why frontend websocket speech was chosen
+4. add a few smoke tests to strengthen engineering credibility
 
 ---
 
-<h2 id="中文">🇨🇳 中文文档</h2>
+## 中文说明
 
-### 📖 项目简介
+### 项目定位
 
-**React Listening Dictation（智能听写发音评估）** 是一款专为英语学习者打造的 AI 赋能应用。它将听力听写练习与专业级的发音评估完美结合。通过对比用户的跟读语音与原文内容，本工具能够精准定位发音错误，帮助用户切实提高英语口语和听力水平。
+这是一个面向英语学习场景的 AI 训练工作台，不是单点功能 demo。它把以下三个训练回路放到了一个统一界面里：
 
-### ✨ 核心特性
+- `听力听写`：上传音频后逐句回放、输入答案、查看差异
+- `句子阅读`：粘贴任意文本，对整段或局部高亮片段做发音评测
+- `问题词复盘`：把练习中出现的错误词收集起来，按来源和日期回看
 
-- **🎧 听力与听写练习**：支持导入本地音频文件，进行逐句的精听和听写练习。
-- **📝 差异高亮对比**：精准对比用户输入的文本（或语音识别结果）与原文本，高亮显示漏词、多词和错词。
-- **🎙️ AI 发音评估**：深度集成 Azure 语音服务（Speech SDK），提供包含准确度、流畅度、完整度在内的专业反馈，评估甚至可精确至**音标级别**。
-- **📊 学习历史追踪**：自动在本地保存用户的每一次练习记录，方便随时回顾和对比发音进步轨迹。
-- **📚 专属生词本**：在练习过程中遇到生词可一键保存，建立个性化词汇库。
+### 项目亮点
 
-### 🛠️ 技术栈
+- 使用前端 Azure Speech SDK，通过 websocket 做低延迟发音评测
+- 听写、发音、历史记录、问题词复盘形成闭环，而不是孤立 API 演示
+- 交互是产品化结构，不是教程式页面拼接
+- 后端职责清晰，只负责转写、历史持久化和统一单词池存储
 
-- **前端框架**：React.js, Vanilla CSS
-- **后端服务**：Node.js, Express.js
-- **AI 赋能**：Microsoft Azure Cognitive Services (Speech SDK), OpenAI Whisper (通过 whisper-node)
-- **音频处理**：FFmpeg, fluent-ffmpeg
+### 技术栈
 
-### 🚀 快速开始
+- `前端`：React 19、Vanilla CSS、浏览器媒体能力
+- `语音评测`：Azure Speech SDK
+- `后端`：Node.js、Express
+- `转写`：whisper-node，可选 whisperx
+- `音频处理`：ffmpeg、fluent-ffmpeg
+- `存储`：`back_node/db` 下的本地 JSON 文件
 
-#### 前置要求
+### 本地启动
 
-- [Node.js](https://nodejs.org/) (建议版本 v18 及以上)
-- 一个有效的 **Azure Speech Service** 密钥
-- 已安装并可在命令行中访问的 `ffmpeg`
-- 若要使用 `whisperx` 模式，还需要 `python3` 和 `whisperx`
+#### 前置条件
 
-#### 1. 环境变量配置
+- Node.js `v18+`
+- 可用的 Azure Speech 服务
+- 已安装并可从命令行访问的 `ffmpeg`
+- 若要使用 `whisperx` 模式，还需要 `python3` 与 `whisperx`
 
-在项目根目录创建 `.env` 文件，可直接参考根目录下的 `.env.example`：
+#### 环境变量
+
+根目录 `.env`：
 
 ```env
 REACT_APP_API_BASE_URL=http://127.0.0.1:8888
 REACT_APP_AZURE_SPEECH_KEY=你的 Azure Speech 密钥
-REACT_APP_AZURE_SPEECH_REGION=你的 Azure 区域（例如 eastus）
+REACT_APP_AZURE_SPEECH_REGION=你的 Azure 区域
 ```
 
-然后在 `back_node` 目录下创建 `.env` 文件，可参考 `back_node/.env.example`：
+`back_node/.env`：
 
 ```env
 PORT=8888
 ```
 
-说明：
-
-- 当前发音评测统一使用前端 Azure Speech SDK，以获得更低延迟的 websocket 实时体验，因此需要配置 `REACT_APP_AZURE_SPEECH_*`。
-- 后端主要负责转写、历史记录和单词池存储。
-- 如果要启用 `whisperx` 模式，还需要确保 `python3 -m whisperx` 可以在本机正常执行。
-
-#### 2. 安装依赖
+#### 安装与运行
 
 ```bash
-# 安装前端依赖（根目录）
 npm install
-
-# 安装后端依赖
-cd back_node
-npm install
-cd ..
-```
-
-#### 3. 启动应用
-
-在项目根目录下运行：
-
-```bash
+cd back_node && npm install && cd ..
 npm run dev
 ```
 
-前端将运行在 `http://localhost:3000`，后端运行在 `http://localhost:8888`。
+前端运行于 `http://localhost:3000`，后端运行于 `http://localhost:8888`。
 
-### ⚠️ 演示 / 部署说明
+### 用于作品集展示时，建议继续补充
 
-这个仓库当前更适合本地演示。项目仍然依赖单独运行的后端服务和本地系统工具（例如 `ffmpeg`），同时发音评测依赖浏览器侧 Azure Speech SDK。
+1. 三个模式各放一张截图或一段 GIF
+2. 增加一张架构图或流程图
+3. 写一段技术取舍说明，例如为什么发音评测放在前端
+4. 增加最小测试，提升工程可信度
 
-### 📂 项目结构
+## License
 
-```text
-├── back_node/         # Node.js 后端端点
-│   ├── db/            # 数据库 (JSON/文件存储，例如上传历史和本地词库)
-│   ├── router_handler/# 路由处理与核心控制器逻辑
-│   └── index.js       # 后端服务入口文件
-├── src/               # React 前端代码
-│   ├── components/    # 核心组件库 (DiffCom, HistorySelector, WordSidebar 等)
-│   └── App.js         # 前端入口
-└── public/            # 静态资源文件
-```
-
-### 📄 开源协议
-
-本项目采用 MIT 开源协议 - 详情请查看 [LICENSE](LICENSE) 文件。
+MIT. See [LICENSE](LICENSE).

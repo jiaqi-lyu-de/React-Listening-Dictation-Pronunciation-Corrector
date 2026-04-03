@@ -237,9 +237,9 @@ const PronunciationResults = ({
                                     <p className="word-practice-status">{getWordStatusLabel(selectedProblemWord)}</p>
                                 </div>
                                 <div className="word-practice-actions">
-                                    <button type="button" className="word-practice-action-btn" onClick={() => speakWord(selectedProblemWord.word)}>Listen</button>
-                                    <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>Prev</button>
-                                    <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>Next</button>
+                                    <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(selectedProblemWord.word)}>Listen</button>
+                                    <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>Prev</button>
+                                    <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>Next</button>
                                 </div>
                             </div>
 
@@ -266,7 +266,7 @@ const PronunciationResults = ({
                                     </div>
 
                                     {selectedPracticeResult?.words?.[0]?.phonemes && (
-                                        <div className="word-practice-phoneme-results" style={{ marginTop: '1rem' }}>
+                                        <div className="word-practice-phoneme-results">
                                             {selectedPracticeResult.words[0].phonemes.map((phoneme, index) => (
                                                 <div key={index} className={`word-practice-phoneme-chip ${getPhonemeClass(phoneme.accuracyScore)}`}>
                                                     <span>{getIPA(phoneme.phoneme)}</span>
@@ -407,13 +407,13 @@ const PronunciationResults = ({
                                         <p className="word-practice-status">{getWordStatusLabel(selectedProblemWord)}</p>
                                     </div>
                                     <div className="word-practice-actions">
-                                        <button type="button" className="word-practice-action-btn" onClick={() => speakWord(selectedProblemWord.word)}>
+                                        <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(selectedProblemWord.word)}>
                                             Listen
                                         </button>
-                                        <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>
+                                        <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>
                                             Previous
                                         </button>
-                                        <button type="button" className="word-practice-action-btn" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>
+                                        <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>
                                             Next
                                         </button>
                                     </div>

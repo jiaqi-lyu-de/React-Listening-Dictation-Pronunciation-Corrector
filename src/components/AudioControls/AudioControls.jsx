@@ -237,7 +237,7 @@ const AudioControls = ({
               type="file"
               onChange={(e) => handleUpload(e.target.files[0])}
               accept="audio/*"
-              style={{ display: 'none' }}
+              className="audio-upload-input"
               disabled={loading}
             />
             <div className="method-selector">
@@ -271,7 +271,7 @@ const AudioControls = ({
         <div className="history-selector-row">
           <HistorySelector onSelect={handleHistorySelect} />
           {audioUrl && (
-            <button className="session-reset-btn" onClick={handleResetSession}>
+            <button className="session-reset-btn ui-btn-secondary" onClick={handleResetSession}>
               Start New Session
             </button>
           )}
@@ -306,26 +306,26 @@ const AudioControls = ({
 
           <div className="playback-controls">
             <button
-              className="control-btn secondary"
+              className="control-btn secondary ui-btn-secondary"
               onClick={handlePrevious}
               disabled={number === 0}
             >
               ⏮ Previous
             </button>
             <button
-              className="control-btn primary"
+              className="control-btn primary ui-btn-primary"
               onClick={replaySentence}
             >
               🔁 Replay Current
             </button>
             <button
-              className="control-btn primary"
+              className="control-btn primary ui-btn-primary"
               onClick={playFull}
             >
               🎧 Play Through
             </button>
             <button
-              className="control-btn secondary"
+              className="control-btn secondary ui-btn-secondary"
               onClick={handleNext}
               disabled={number >= totalSentences - 1}
             >

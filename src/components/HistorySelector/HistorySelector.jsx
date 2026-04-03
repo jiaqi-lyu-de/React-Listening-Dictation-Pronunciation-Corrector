@@ -56,7 +56,7 @@ const HistorySelector = ({ onSelect }) => {
 
     return (
         <div className="history-selector">
-            <button className="history-btn" onClick={() => setIsOpen(!isOpen)}>
+            <button className="history-btn ui-btn-secondary" onClick={() => setIsOpen(!isOpen)}>
                 {isOpen ? 'Close History' : '📜 Load History'}
             </button>
 
@@ -65,15 +65,21 @@ const HistorySelector = ({ onSelect }) => {
                     {loading ? (
                         <div className="history-loading">⏳ Loading history...</div>
                     ) : errorMessage ? (
-                        <div className="history-error">{errorMessage}</div>
+                        <div className="history-error ui-feedback ui-feedback--error">{errorMessage}</div>
                     ) : historyFiles.length === 0 ? (
                         <div className="history-empty">📭 No history found</div>
                     ) : (
                         <ul className="history-list">
                             {historyFiles.map(file => (
-                                <li key={file.filename} onClick={() => handleSelect(file.filename)}>
-                                    <span className="history-name">{file.filename.replace('analysis_', '').replace('.json', '')}</span>
-                                    <span className="history-date">{new Date(file.created).toLocaleDateString()}</span>
+                                <li key={file.filename}>
+                                    <button
+                                        type="button"
+                                        className="history-item-btn"
+                                        onClick={() => handleSelect(file.filename)}
+                                    >
+                                        <span className="history-name">{file.filename.replace('analysis_', '').replace('.json', '')}</span>
+                                        <span className="history-date">{new Date(file.created).toLocaleDateString()}</span>
+                                    </button>
                                 </li>
                             ))}
                         </ul>

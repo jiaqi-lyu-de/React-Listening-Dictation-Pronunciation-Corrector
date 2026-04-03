@@ -3,13 +3,14 @@
     backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    padding: 2rem;
-    box-shadow: var(--shadow-lg);
+    padding: var(--space-card);
+    margin-bottom: var(--space-card);
+    box-shadow: var(--shadow-md);
     transition: all var(--transition-normal);
 }
 
 .audio-controls-container:hover {
-    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    box-shadow: var(--shadow-lg);
 }
 
 .upload-section {
@@ -50,7 +51,7 @@
     justify-content: flex-start;
     gap: 1rem;
     padding: 1.5rem;
-    background: linear-gradient(135deg, rgba(18, 54, 41, 0.96) 0%, rgba(178, 91, 42, 0.96) 100%);
+    background: linear-gradient(135deg, rgba(18, 54, 41, 0.92) 0%, rgba(178, 91, 42, 0.92) 100%);
     color: white;
     border-radius: var(--radius-lg);
     cursor: pointer;
@@ -62,11 +63,15 @@
 
 .upload-label:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lg), 0 0 30px rgba(18, 54, 41, 0.22);
+    box-shadow: var(--shadow-lg);
 }
 
 .upload-label:active {
     transform: translateY(-1px) scale(1.01);
+}
+
+.audio-upload-input {
+    display: none;
 }
 
 .upload-text-group {
@@ -94,7 +99,7 @@
     gap: 0.35rem;
     padding: 1rem 1rem 1rem 2.7rem;
     position: relative;
-    background: rgba(255, 255, 255, 0.52);
+    background: var(--surface-soft);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     cursor: pointer;
@@ -202,20 +207,8 @@
 
 .session-reset-btn {
     padding: 0.8rem 1.1rem;
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
     cursor: pointer;
-    font-family: inherit;
     font-weight: 700;
-    transition: all var(--transition-normal);
-}
-
-.session-reset-btn:hover {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    background: rgba(255, 255, 255, 0.62);
 }
 
 .audio-session-meta {
@@ -228,7 +221,7 @@
 
 .session-chip {
     padding: 0.95rem 1rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--surface-soft);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     min-width: 0;
@@ -304,50 +297,22 @@
 
 .control-btn {
     padding: 0.875rem 1.75rem;
-    border: none;
-    border-radius: var(--radius-md);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-normal);
-    font-family: inherit;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.control-btn.primary {
-    background: var(--accent-gradient);
-    color: white;
-    box-shadow: var(--shadow-md);
-}
+.control-btn.primary {}
 
-.control-btn.primary:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg), 0 0 20px rgba(178, 91, 42, 0.25);
-}
+.control-btn.primary:hover:not(:disabled) {}
 
-.control-btn.secondary {
-    background: rgba(255, 255, 255, 0.65);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
+.control-btn.secondary {}
 
-.control-btn.secondary:hover:not(:disabled) {
-    background: var(--bg-glass);
-    transform: translateY(-2px);
-    border-color: var(--accent-primary);
-}
-
-.control-btn:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.control-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+.control-btn.secondary:hover:not(:disabled) {}
 
 @media (max-width: 880px) {
 

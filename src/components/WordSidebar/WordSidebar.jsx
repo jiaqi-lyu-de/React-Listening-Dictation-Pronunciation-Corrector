@@ -7,7 +7,7 @@ const WordSidebar = () => {
     const [saving, setSaving] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
-    const [statusTone, setStatusTone] = useState('neutral');
+    const [statusTone, setStatusTone] = useState('info');
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -29,7 +29,7 @@ const WordSidebar = () => {
     const addWord = (word) => {
         setWords(prev => {
             if (prev.some(w => w.toLowerCase() === word.toLowerCase())) {
-                setStatusTone('neutral');
+                setStatusTone('info');
                 setStatusMessage(`"${word}" is already in your list.`);
                 return prev;
             }
@@ -45,7 +45,7 @@ const WordSidebar = () => {
             const removed = prev[index];
             const next = prev.filter((_, i) => i !== index);
             if (removed) {
-                setStatusTone('neutral');
+                setStatusTone('info');
                 setStatusMessage(`Removed "${removed}" from the list.`);
             }
             return next;
@@ -77,10 +77,10 @@ const WordSidebar = () => {
         <div className="word-sidebar-container">
             {!isVisible && words.length > 0 && (
                 <button 
-                    className="sidebar-toggle-pill"
+                    className="sidebar-toggle-pill ui-btn-primary"
                     onClick={() => setIsVisible(true)}
                 >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="m18 15-6-6-6 6"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                     Words ({words.length})
                 </button>
             )}
@@ -88,15 +88,15 @@ const WordSidebar = () => {
             {(isVisible || words.length === 0) && (
                 <div className="word-sidebar">
                 <div className="sidebar-header">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div className="sidebar-header-meta">
                         <h3>Vocabulary</h3>
                         <span className="word-count-badge">{words.length}</span>
                     </div>
                     <button 
-                        className="remove-btn" 
+                        className="ui-icon-button sidebar-close-btn" 
                         onClick={() => setIsVisible(false)}
-                        style={{ color: '#999' }}
                         title="Hide Sidebar"
+                        type="button"
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     </button>
@@ -105,7 +105,7 @@ const WordSidebar = () => {
                 <div className="word-list-items">
                     {words.length === 0 ? (
                         <div className="empty-message">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '12px' }}>
+                            <svg className="sidebar-empty-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M8 7h6"/><path d="M8 11h8"/>
                             </svg>
                             <p>Select text and press <br/><span className="shortcut-hint">⌘ + B</span> to add words</p>
@@ -114,7 +114,7 @@ const WordSidebar = () => {
                         words.map((word, index) => (
                             <li key={index} className="word-item-sidebar">
                                 <span className="word-text">{word}</span>
-                                <button className="remove-btn" onClick={() => removeWord(index)}>
+                                <button type="button" className="ui-icon-button word-remove-btn" onClick={() => removeWord(index)}>
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                                 </button>
                             </li>
@@ -124,18 +124,18 @@ const WordSidebar = () => {
 
                 <div className="sidebar-footer">
                     {statusMessage && (
-                        <div className={`sidebar-status ${statusTone}`}>
+                        <div className={`sidebar-status ui-feedback ui-feedback--${statusTone}`}>
                             {statusMessage}
                         </div>
                     )}
                     <button
-                        className="save-btn"
+                        className="save-btn ui-btn-primary"
                         onClick={saveWords}
                         disabled={saving || words.length === 0}
                     >
                         {saving ? (
                             <>
-                                <svg className="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                                <svg className="ui-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                                 Saving...
                             </>
                         ) : (
@@ -145,9 +145,6 @@ const WordSidebar = () => {
                             </>
                         )}
                     </button>
-                    <style>{`
-                        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                    `}</style>
                 </div>
             </div>
             )}

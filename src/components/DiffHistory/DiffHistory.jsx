@@ -69,13 +69,13 @@ const DiffHistory = ({ history, audioFileName, onExport }) => {
                         Avg: {averageAccuracy}%
                     </span>
                 </div>
-                <button className="export-btn" onClick={handleExport}>
+                <button className="export-btn ui-btn-primary" onClick={handleExport}>
                     📥 Export All Diffs
                 </button>
             </div>
 
             {exportStatus && (
-                <div className="diff-history-status">
+                <div className="diff-history-status ui-feedback ui-feedback--info">
                     {exportStatus}
                 </div>
             )}

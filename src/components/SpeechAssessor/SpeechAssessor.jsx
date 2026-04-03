@@ -1,21 +1,26 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import useAzureSpeech from '../../utils/useAzureSpeech';
 import './SpeechAssessor.css';
 
 /**
  * SpeechAssessor
- * Uses the shared speech hook and sends audio to the backend pronunciation API.
+ * Uses the shared Azure speech hook for live pronunciation assessment.
  */
 const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
     const {
         isRecording,
         isProcessing,
+        error,
         startContinuousAssessment,
         stopContinuousAssessment
     } = useAzureSpeech();
 
-    const [audioUrl, setAudioUrl] = useState(null);
     const segmentsRef = useRef([]);
+
+    useEffect(() => {
+        if (!error || !onError) return;
+        onError(error);
+    }, [error, onError]);
 
     const handleToggleRecording = async () => {
         if (isProcessing) return;
@@ -32,7 +37,6 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
         }
 
         // Start recording
-        setAudioUrl(null);
         segmentsRef.current = [];
 
         startContinuousAssessment(
@@ -47,7 +51,7 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
     return (
         <div className="speech-recorder">
             <button
-                className={`record-button ${isRecording ? 'recording' : ''} ${isProcessing ? 'processing' : ''}`}
+                className={`record-button ui-btn-primary ${isRecording ? 'recording' : ''} ${isProcessing ? 'processing' : ''}`}
                 onClick={handleToggleRecording}
                 disabled={isProcessing}
             >
@@ -72,12 +76,6 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
                 <div className="recording-indicator">
                     <span className="pulse"></span>
                     Recording in progress...
-                </div>
-            )}
-
-            {audioUrl && !isRecording && (
-                <div className="audio-preview" style={{ marginTop: '10px' }}>
-                    <audio src={audioUrl} controls style={{ height: '30px' }} />
                 </div>
             )}
         </div>

@@ -172,7 +172,7 @@ const DiffCom = ({
               <p className="reference-lock-hint">{referencePlaceholder}</p>
             )}
           </div>
-          <button className="reference-audio-btn" onClick={onReplayAudio}>
+          <button className="reference-audio-btn ui-btn-ghost" onClick={onReplayAudio}>
             Replay Audio
           </button>
         </div>
@@ -214,16 +214,16 @@ const DiffCom = ({
           </div>
         )}
         <div className="input-actions">
-          <button className="input-action secondary" onClick={handleClear} disabled={!userInput}>
+          <button className="input-action secondary ui-btn-secondary" onClick={handleClear} disabled={!userInput}>
             Clear
           </button>
-          <button className="input-action secondary" onClick={onReplayAudio}>
+          <button className="input-action secondary ui-btn-secondary" onClick={onReplayAudio}>
             Replay
           </button>
-          <button className="input-action primary" onClick={handleCheck} disabled={!userInput.trim()}>
+          <button className="input-action primary ui-btn-primary" onClick={handleCheck} disabled={!userInput.trim()}>
             Check Answer
           </button>
-          <button className="input-action primary ghost" onClick={onNext}>
+          <button className="input-action primary ghost ui-btn-ghost" onClick={onNext}>
             Next Sentence
           </button>
         </div>
