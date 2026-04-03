@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import useAzureSpeech from '../../utils/useAzureSpeech';
+import { fetchAPI } from '../../utils/fetch';
 import PronunciationResults from '../PronunciationResults/PronunciationResults';
 import '../PronunciationResults/PronunciationResults.css';
 import '../HistorySelector/HistorySelector.css';
@@ -10,6 +11,7 @@ const HISTORY_SOURCES = [
     { key: 'Dictation', label: '听力部分' },
     { key: 'Sentence Reading', label: '句子阅读' }
 ];
+const normalizeWord = (value = '') => value.toLowerCase().replace(/[^a-z]/g, '');
 
 /**
  * WordReading — Main container for the Word Reading module.
@@ -50,13 +52,12 @@ const WordReading = ({
         setTimeout(() => setToast(''), 2500);
     }, []);
 
-    // Load words from public/words.json
+    // Load words from backend storage
     useEffect(() => {
         const loadWords = async () => {
             try {
-                const resp = await fetch('/words.json');
-                const data = await resp.json();
-                setAllWords(data);
+                const data = await fetchAPI('words', 'GET');
+                setAllWords(data.words || []);
             } catch (err) {
                 console.error('Failed to load words:', err);
                 showToast('Failed to load word list');
@@ -113,11 +114,7 @@ const WordReading = ({
 
         // Save to server
         try {
-            await fetch('http://localhost:8888/save-words-file', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedWords),
-            });
+            await fetchAPI('save-words-file', 'POST', { body: updatedWords });
             showToast(`Permanently deleted ${deletedCount} words`);
         } catch (e) {
             console.error('Save error:', e);
@@ -129,11 +126,7 @@ const WordReading = ({
     // Record low score attempt
     const recordLowScore = useCallback(async (word, score, phonemes) => {
         try {
-            await fetch('http://localhost:8888/record-attempt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ word, score, phonemes }),
-            });
+            await fetchAPI('record-attempt', 'POST', { body: { word, score, phonemes } });
         } catch (e) {
             console.error('Record attempt failed:', e);
         }
@@ -163,6 +156,38 @@ const WordReading = ({
             // Stop
             stopContinuousAssessment(segmentsRef.current).then(overall => {
                 if (overall) {
+                    const recognizedWords = [...(overall.words || [])];
+                    setWordResults(() => {
+                        const next = new Map();
+
+                        pageWords.forEach((pageWord, i) => {
+                            const absIdx = pageStart + i;
+                            if (pendingDeletions.has(absIdx)) return;
+
+                            const target = normalizeWord(pageWord.word);
+                            const matchIndex = recognizedWords.findIndex(
+                                (recognizedWord) => normalizeWord(recognizedWord.word) === target
+                            );
+
+                            if (matchIndex < 0) return;
+
+                            const match = recognizedWords.splice(matchIndex, 1)[0];
+                            next.set(absIdx, {
+                                accuracy: match.accuracyScore ?? 0,
+                                pronScore: match.accuracyScore ?? 0,
+                                wordGroups: [{
+                                    word: match.word,
+                                    phonemes: match.phonemes || []
+                                }]
+                            });
+
+                            if ((match.accuracyScore ?? 0) <= 80) {
+                                recordLowScore(match.word, match.accuracyScore ?? 0, match.phonemes || []);
+                            }
+                        });
+
+                        return next;
+                    });
                     showToast('Page assessment complete');
                 }
             });

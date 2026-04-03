@@ -3,9 +3,8 @@ import useAzureSpeech from '../../utils/useAzureSpeech';
 import './SpeechAssessor.css';
 
 /**
- * SpeechAssessor — replaces old SpeechRecorder component.
- * Uses browser-side Azure Speech SDK directly via useAzureSpeech hook.
- * No backend proxy needed.
+ * SpeechAssessor
+ * Uses the shared speech hook and sends audio to the backend pronunciation API.
  */
 const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
     const {

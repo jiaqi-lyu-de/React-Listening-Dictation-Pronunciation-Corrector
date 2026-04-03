@@ -25,6 +25,8 @@ yarn-error.log*
 !/back_node/db/uploads/.gitkeep
 /back_node/db/history/*
 !/back_node/db/history/.gitkeep
+/back_node/db/attempts/*
+!/back_node/db/attempts/.gitkeep
 /back_node/db/words.json
 /back_node/uploads/*
 !/back_node/uploads/.gitkeep

@@ -10,6 +10,16 @@ if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR);
 if (!fs.existsSync(HISTORY_DIR)) fs.mkdirSync(HISTORY_DIR);
 if (!fs.existsSync(WORDS_FILE)) fs.writeFileSync(WORDS_FILE, '[]');
 
+exports.getWords = (req, res) => {
+    try {
+        const words = JSON.parse(fs.readFileSync(WORDS_FILE, 'utf8'));
+        res.send({ success: true, words });
+    } catch (error) {
+        console.error('Error reading words:', error);
+        res.status(500).send({ error: 'Failed to read words' });
+    }
+};
+
 exports.saveWords = (req, res) => {
     try {
         const newWords = req.body.words; // Expecting array of objects or strings

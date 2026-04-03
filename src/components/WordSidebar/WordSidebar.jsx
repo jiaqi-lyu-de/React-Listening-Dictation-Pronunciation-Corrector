@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { fetchAPI } from '../../utils/fetch';
 import './WordSidebar.css';
 
 const WordSidebar = () => {
@@ -42,21 +43,9 @@ const WordSidebar = () => {
 
         setSaving(true);
         try {
-            const response = await fetch('http://localhost:8888/save-words', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ words })
-            });
-
-            if (response.ok) {
-                // Subtle success feedback could go here
-                setWords([]);
-                setIsVisible(false);
-            } else {
-                alert('Failed to save words.');
-            }
+            await fetchAPI('save-words', 'POST', { body: { words } });
+            setWords([]);
+            setIsVisible(false);
         } catch (error) {
             console.error('Error saving words:', error);
             alert('Error saving words.');

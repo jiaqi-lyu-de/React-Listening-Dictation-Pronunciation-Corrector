@@ -8,6 +8,7 @@ const ATTEMPTS_DIR = path.join(DB_DIR, 'attempts');
 // Ensure directories exist
 if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
 if (!fs.existsSync(ATTEMPTS_DIR)) fs.mkdirSync(ATTEMPTS_DIR, { recursive: true });
+if (!fs.existsSync(WORDS_FILE)) fs.writeFileSync(WORDS_FILE, '[]', 'utf-8');
 
 /**
  * Save entire words.json file (used by WordReading delete + persist)
@@ -19,9 +20,7 @@ exports.saveWordsFile = (req, res) => {
             return res.status(400).json({ error: 'Expected array of words' });
         }
 
-        // Also save to public/words.json so that the frontend can reload
-        const publicWordsPath = path.resolve(__dirname, '../../public/words.json');
-        fs.writeFileSync(publicWordsPath, JSON.stringify(words, null, 2), 'utf-8');
+        fs.writeFileSync(WORDS_FILE, JSON.stringify(words, null, 2), 'utf-8');
 
         res.json({ success: true });
     } catch (e) {

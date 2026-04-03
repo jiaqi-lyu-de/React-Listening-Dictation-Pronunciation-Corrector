@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useAzureSpeech from '../../utils/useAzureSpeech';
 import { getIPA } from '../../utils/ipaMap';
+import { fetchAPI } from '../../utils/fetch';
 import './PronunciationResults.css';
 
 const PronunciationResults = ({
@@ -130,17 +131,15 @@ const PronunciationResults = ({
             if (attemptedProblemWordsRef.current.has(attemptKey)) return;
             attemptedProblemWordsRef.current.add(attemptKey);
 
-            fetch('http://localhost:8888/record-attempt', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            fetchAPI('record-attempt', 'POST', {
+                body: {
                     word: w.word,
                     score: w.accuracyScore,
                     phonemes: w.phonemes?.map(p => ({
                         phoneme: p.phoneme,
                         accuracyScore: p.accuracyScore
                     })) || []
-                })
+                }
             }).catch((e) => {
                 console.error('Failed to record attempt:', e);
             });

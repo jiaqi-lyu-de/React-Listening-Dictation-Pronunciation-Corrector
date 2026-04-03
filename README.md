@@ -37,17 +37,32 @@
 
 #### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v16 or higher recommended)
-- An **Azure Speech Service** subscription key.
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- An **Azure Speech Service** subscription key
+- `ffmpeg` installed and available in your shell `PATH`
+- Optional for `whisperx` mode: `python3` plus `whisperx`
 
 #### 1. Environment Configuration
 
-Navigate to the `back_node` directory and create a `.env` file (you can copy `.env.example`):
+Create a root `.env` file from `.env.example`:
 
 ```env
-AZURE_SPEECH_KEY=your_azure_speech_key_here
-AZURE_SPEECH_REGION=your_azure_region_here
+REACT_APP_API_BASE_URL=http://127.0.0.1:8888
+REACT_APP_AZURE_SPEECH_KEY=your_azure_speech_key_here
+REACT_APP_AZURE_SPEECH_REGION=your_azure_region_here
 ```
+
+Then create `back_node/.env` from `back_node/.env.example`:
+
+```env
+PORT=8888
+```
+
+Notes:
+
+- Pronunciation assessment uses the browser Azure Speech SDK for lower-latency websocket streaming, so the `REACT_APP_AZURE_SPEECH_*` values are required in the frontend environment.
+- The backend is only used for transcription, history, and word storage.
+- `whisperx` mode additionally requires a Python environment where `python3 -m whisperx` works.
 
 #### 2. Dependencies Setup
 
@@ -70,6 +85,10 @@ npm run dev
 ```
 
 The frontend will run at `http://localhost:3000` and the backend at `http://localhost:8888`.
+
+### ⚠️ Demo / Deployment Note
+
+This repo is currently optimized for local demo use. It assumes a separately running backend plus local system dependencies such as `ffmpeg`, and the browser-based Azure Speech SDK requires frontend environment variables for pronunciation assessment.
 
 ### 📂 Project Structure
 
@@ -115,17 +134,32 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 #### 前置要求
 
-- [Node.js](https://nodejs.org/) (建议版本 v16 及以上)
-- 一个有效的 **Azure Speech Service** 密钥。
+- [Node.js](https://nodejs.org/) (建议版本 v18 及以上)
+- 一个有效的 **Azure Speech Service** 密钥
+- 已安装并可在命令行中访问的 `ffmpeg`
+- 若要使用 `whisperx` 模式，还需要 `python3` 和 `whisperx`
 
 #### 1. 环境变量配置
 
-进入 `back_node` 目录下，创建一个 `.env` 文件（可以参考现有的 `.env.example`）：
+在项目根目录创建 `.env` 文件，可直接参考根目录下的 `.env.example`：
 
 ```env
-AZURE_SPEECH_KEY=你的Azure核心密钥
-AZURE_SPEECH_REGION=你的Azure区域 (例如 eastus)
+REACT_APP_API_BASE_URL=http://127.0.0.1:8888
+REACT_APP_AZURE_SPEECH_KEY=你的 Azure Speech 密钥
+REACT_APP_AZURE_SPEECH_REGION=你的 Azure 区域（例如 eastus）
 ```
+
+然后在 `back_node` 目录下创建 `.env` 文件，可参考 `back_node/.env.example`：
+
+```env
+PORT=8888
+```
+
+说明：
+
+- 当前发音评测统一使用前端 Azure Speech SDK，以获得更低延迟的 websocket 实时体验，因此需要配置 `REACT_APP_AZURE_SPEECH_*`。
+- 后端主要负责转写、历史记录和单词池存储。
+- 如果要启用 `whisperx` 模式，还需要确保 `python3 -m whisperx` 可以在本机正常执行。
 
 #### 2. 安装依赖
 
@@ -148,6 +182,10 @@ npm run dev
 ```
 
 前端将运行在 `http://localhost:3000`，后端运行在 `http://localhost:8888`。
+
+### ⚠️ 演示 / 部署说明
+
+这个仓库当前更适合本地演示。项目仍然依赖单独运行的后端服务和本地系统工具（例如 `ffmpeg`），同时发音评测依赖浏览器侧 Azure Speech SDK。
 
 ### 📂 项目结构
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { buildApiUrl, fetchAPI } from '../../utils/fetch';
 import './HistorySelector.css';
 
 const HistorySelector = ({ onSelect }) => {
@@ -9,8 +10,7 @@ const HistorySelector = ({ onSelect }) => {
     const loadHistory = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:8888/history');
-            const data = await response.json();
+            const data = await fetchAPI('history', 'GET');
             if (data.success) {
                 setHistoryFiles(data.history);
             }
@@ -29,13 +29,12 @@ const HistorySelector = ({ onSelect }) => {
 
     const handleSelect = async (filename) => {
         try {
-            const response = await fetch(`http://localhost:8888/history/${filename}`);
-            const data = await response.json();
+            const data = await fetchAPI(`history/${filename}`, 'GET');
             if (onSelect) {
                 // Determine audio URL
                 let audioUrl = null;
                 if (data.audioFilename) {
-                    audioUrl = `http://localhost:8888/uploads/${data.audioFilename}`;
+                    audioUrl = buildApiUrl(`uploads/${data.audioFilename}`);
                 }
 
                 onSelect({
