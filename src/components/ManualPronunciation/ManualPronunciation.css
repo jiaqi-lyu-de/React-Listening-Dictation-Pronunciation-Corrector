@@ -85,11 +85,9 @@
     cursor: pointer;
 }
 
-.btn-apply {
-}
+.btn-apply {}
 
-.btn-clear {
-}
+.btn-clear {}
 
 .practice-section {
     background-color: var(--bg-secondary);
@@ -122,15 +120,6 @@
 .text-display-area::selection {
     background-color: rgba(178, 91, 42, 0.18);
     color: var(--text-primary);
-}
-
-.selection-info {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background-color: rgba(178, 91, 42, 0.06);
-    border-radius: 8px;
-    border-left: 4px solid var(--accent-primary);
-    font-size: 1rem;
 }
 
 .mp-selection-actions {

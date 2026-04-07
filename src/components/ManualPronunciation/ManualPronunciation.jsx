@@ -188,15 +188,6 @@ const ManualPronunciation = ({ onProblemWordsCaptured }) => {
                         {displayText}
                     </div>
 
-                    <div className="selection-info">
-                        <span className="selection-label">Currently selected: </span>
-                        {selectedText ? (
-                            <span className="selected-phrase">"{selectedText}"</span>
-                        ) : (
-                            <span className="no-selection">None (Please highlight text above)</span>
-                        )}
-                    </div>
-
                     <div className="mp-selection-actions">
                         <button className="mp-selection-btn ui-btn-secondary" onClick={handleUseFullText}>
                             Practice Full Text

@@ -3,11 +3,22 @@ const whisper = whisperModule.default || whisperModule.whisper;
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
-const { exec } = require('child_process');
+const ffmpegStatic = require('ffmpeg-static');
+
+ffmpeg.setFfmpegPath(ffmpegStatic);
 
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' });
+const TEMP_UPLOAD_DIR = path.join(__dirname, '../db/tmp');
+if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+    fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
+}
+const upload = multer({ dest: TEMP_UPLOAD_DIR });
 exports.uploadMiddleware = upload.single('audio');
+
+const WHISPERX_SERVICE_URL = (process.env.WHISPERX_SERVICE_URL || 'http://127.0.0.1:8008').replace(/\/+$/, '');
+const WHISPERX_MODEL = process.env.WHISPERX_MODEL || 'small';
+const WHISPERX_DEVICE = process.env.WHISPERX_DEVICE || 'cpu';
+const WHISPERX_COMPUTE_TYPE = process.env.WHISPERX_COMPUTE_TYPE || 'int8';
 
 // Time formatter helper for converting seconds to HH:MM:SS.mmm
 const formatTime = (seconds) => {
@@ -18,6 +29,71 @@ const formatTime = (seconds) => {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 };
 
+const ensureDirectory = (dirPath) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+};
+
+const mapSegmentsToTranscript = (segments = []) => segments.map((segment) => ({
+    start: formatTime(segment.start),
+    end: formatTime(segment.end),
+    speech: segment.text.trim()
+}));
+
+const runWhisperXViaService = async (audioPath) => {
+    let response;
+    try {
+        response = await fetch(`${WHISPERX_SERVICE_URL}/transcribe`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                audio_path: audioPath,
+                model_name: WHISPERX_MODEL,
+                device: WHISPERX_DEVICE,
+                compute_type: WHISPERX_COMPUTE_TYPE,
+                language: 'en'
+            })
+        });
+    } catch (error) {
+        throw new Error(
+            `WhisperX service is unavailable at ${WHISPERX_SERVICE_URL}. Start the Python service with "python3 python_whisperx/app.py".`
+        );
+    }
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw new Error(payload.detail || payload.error || 'WhisperX service request failed');
+    }
+
+    if (!Array.isArray(payload.segments)) {
+        throw new Error('WhisperX service returned an invalid response');
+    }
+
+    return mapSegmentsToTranscript(payload.segments);
+};
+
+exports.whisperxHealth = async (_req, res) => {
+    try {
+        const response = await fetch(`${WHISPERX_SERVICE_URL}/health`);
+        if (!response.ok) {
+            return res.status(503).send({
+                success: false,
+                error: 'WhisperX service responded with an unhealthy status.'
+            });
+        }
+
+        return res.send({ success: true });
+    } catch (error) {
+        return res.status(503).send({
+            success: false,
+            error: `WhisperX service is unavailable at ${WHISPERX_SERVICE_URL}.`
+        });
+    }
+};
 
 exports.toText = async (req, res) => {
     // 1. Check if file exists in request
@@ -25,8 +101,8 @@ exports.toText = async (req, res) => {
         return res.status(400).send({ error: 'No audio file uploaded' });
     }
 
-    const inputFile = req.file.path; // Multer's temporary path
-    const outputFile = `${inputFile}.wav`;
+    const inputFile = path.resolve(req.file.path); // Multer's temporary path
+    const outputFile = path.resolve(`${inputFile}.wav`);
 
     try {
         // 2. Convert MP3 to WAV (16kHz mono)
@@ -46,32 +122,8 @@ exports.toText = async (req, res) => {
         let transcript = [];
 
         if (method === 'whisperx') {
-            console.log(`Running whisperx on ${outputFile}...`);
-            const outputDir = path.dirname(outputFile);
-            await new Promise((resolve, reject) => {
-                exec(`TORCH_FORCE_WEIGHTS_ONLY_LOAD=0 python3 -m whisperx "${outputFile}" --output_format json --compute_type int8 --model small --output_dir "${outputDir}"`, (error, stdout, stderr) => {
-                    if (error) {
-                        console.error('whisperx error:', error, stderr);
-                        return reject(error);
-                    }
-                    resolve(stdout);
-                });
-            });
-
-            const parsedPath = path.parse(outputFile);
-            const jsonFile = path.join(parsedPath.dir, parsedPath.name + '.json');
-
-            if (fs.existsSync(jsonFile)) {
-                const data = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
-                transcript = data.segments.map(s => ({
-                    start: formatTime(s.start),
-                    end: formatTime(s.end),
-                    speech: s.text.trim()
-                }));
-                fs.unlinkSync(jsonFile); // cleanup
-            } else {
-                throw new Error('whisperx output JSON file not found');
-            }
+            console.log(`Requesting whisperx service for ${outputFile}...`);
+            transcript = await runWhisperXViaService(outputFile);
         } else {
             // whisper-node fallback
             const options = {
@@ -99,9 +151,7 @@ exports.toText = async (req, res) => {
         const uploadsDir = path.join(__dirname, '../db/uploads');
         const savedAudioPath = path.join(uploadsDir, audioFilename);
 
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
+        ensureDirectory(uploadsDir);
 
         // Rename/Move the wav file
         fs.renameSync(outputFile, savedAudioPath);
@@ -116,9 +166,7 @@ exports.toText = async (req, res) => {
         const historyPath = path.join(__dirname, '../db/history', historyFilename);
 
         const historyDir = path.dirname(historyPath);
-        if (!fs.existsSync(historyDir)) {
-            fs.mkdirSync(historyDir, { recursive: true });
-        }
+        ensureDirectory(historyDir);
 
         fs.writeFileSync(historyPath, JSON.stringify(historyData, null, 2));
 

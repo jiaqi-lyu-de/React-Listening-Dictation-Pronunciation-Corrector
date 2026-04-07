@@ -11,7 +11,7 @@ const PronunciationResults = ({
     onProblemWordsCaptured,
     isProblemOnly = false
 }) => {
-    const { isRecording: isWordRecording, isProcessing: processingWord, startContinuousAssessment, stopContinuousAssessment } = useAzureSpeech();
+    const { isProcessing: processingWord, assessPronunciation } = useAzureSpeech();
     const [recordingWordIndex, setRecordingWordIndex] = useState(null);
     const [wordPracticeResults, setWordPracticeResults] = useState({});
     const [selectedProblemWordIndex, setSelectedProblemWordIndex] = useState(null);
@@ -57,27 +57,15 @@ const PronunciationResults = ({
 
     const runWordAssessment = async (word, index) => {
         if (processingWord) return;
+        setRecordingWordIndex(index);
+        const result = await assessPronunciation(word);
+        setRecordingWordIndex(null);
 
-        if (isWordRecording) {
-            if (recordingWordIndex === index) {
-                // Manually stop the recording
-                const result = await stopContinuousAssessment();
-                setRecordingWordIndex(null);
-
-                if (result && result.words && result.words.length > 0) {
-                    setWordPracticeResults(prev => ({
-                        ...prev,
-                        [index]: result
-                    }));
-                }
-            } else {
-                // If recording another word, ignore or could stop it
-                return;
-            }
-        } else {
-            // Start recording
-            setRecordingWordIndex(index);
-            startContinuousAssessment(word);
+        if (result && result.words && result.words.length > 0) {
+            setWordPracticeResults(prev => ({
+                ...prev,
+                [index]: result
+            }));
         }
     };
 
@@ -103,6 +91,11 @@ const PronunciationResults = ({
     const problemWords = problemWordIndices.map(index => ({ ...allWords[index], sourceIndex: index }));
     const selectedProblemWord = selectedProblemWordIndex !== null ? allWords[selectedProblemWordIndex] : null;
     const selectedPracticeResult = selectedProblemWordIndex !== null ? wordPracticeResults[selectedProblemWordIndex] : null;
+    const selectedPracticeWord = selectedPracticeResult?.words?.[0] || null;
+    const selectedDisplayedAccuracy = selectedPracticeResult
+        ? selectedPracticeResult.pronunciationAssessment.accuracyScore
+        : selectedProblemWord?.accuracyScore ?? 0;
+    const selectedDisplayedErrorType = selectedPracticeWord?.errorType || selectedProblemWord?.errorType || 'None';
     const selectedProblemPosition = selectedProblemWordIndex !== null ? problemWordIndices.indexOf(selectedProblemWordIndex) : -1;
     const hasPrevProblemWord = selectedProblemPosition > 0;
     const hasNextProblemWord = selectedProblemPosition >= 0 && selectedProblemPosition < problemWordIndices.length - 1;
@@ -184,6 +177,14 @@ const PronunciationResults = ({
         setSelectedProblemWordIndex(problemWordIndices[nextPosition]);
     };
 
+    const selectedDisplayedWord = selectedProblemWord
+        ? {
+            ...selectedProblemWord,
+            accuracyScore: selectedDisplayedAccuracy,
+            errorType: selectedDisplayedErrorType
+        }
+        : null;
+
     if (!pronunciationResult) return null;
 
     if (isProblemOnly) {
@@ -230,11 +231,11 @@ const PronunciationResults = ({
                                     <p className="word-practice-kicker">Focused practice</p>
                                     <div className="word-practice-title-row">
                                         <h5 className="word-practice-title">{selectedProblemWord.word}</h5>
-                                        <span className={`word-practice-score ${getScoreClass(selectedProblemWord.accuracyScore)}`}>
-                                            {Math.round(selectedProblemWord.accuracyScore)}%
+                                        <span className={`word-practice-score ${getScoreClass(selectedDisplayedAccuracy)}`}>
+                                            {Math.round(selectedDisplayedAccuracy)}%
                                         </span>
                                     </div>
-                                    <p className="word-practice-status">{getWordStatusLabel(selectedProblemWord)}</p>
+                                    <p className="word-practice-status">{getWordStatusLabel(selectedDisplayedWord)}</p>
                                 </div>
                                 <div className="word-practice-actions">
                                     <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(selectedProblemWord.word)}>Listen</button>
@@ -281,11 +282,11 @@ const PronunciationResults = ({
                                     <div className="word-practice-summary-grid">
                                         <div className="word-practice-summary-item">
                                             <span className="word-practice-summary-label">Accuracy</span>
-                                            <strong>{Math.round(selectedProblemWord.accuracyScore)}%</strong>
+                                            <strong>{Math.round(selectedDisplayedAccuracy)}%</strong>
                                         </div>
                                         <div className="word-practice-summary-item">
                                             <span className="word-practice-summary-label">Error</span>
-                                            <strong>{selectedProblemWord.errorType}</strong>
+                                            <strong>{selectedDisplayedErrorType}</strong>
                                         </div>
                                     </div>
                                 </section>
@@ -400,11 +401,11 @@ const PronunciationResults = ({
                                         <p className="word-practice-kicker">Focused practice</p>
                                         <div className="word-practice-title-row">
                                             <h5 className="word-practice-title">{selectedProblemWord.word}</h5>
-                                            <span className={`word-practice-score ${getScoreClass(selectedProblemWord.accuracyScore)}`}>
-                                                {Math.round(selectedProblemWord.accuracyScore)}%
+                                            <span className={`word-practice-score ${getScoreClass(selectedDisplayedAccuracy)}`}>
+                                                {Math.round(selectedDisplayedAccuracy)}%
                                             </span>
                                         </div>
-                                        <p className="word-practice-status">{getWordStatusLabel(selectedProblemWord)}</p>
+                                        <p className="word-practice-status">{getWordStatusLabel(selectedDisplayedWord)}</p>
                                     </div>
                                     <div className="word-practice-actions">
                                         <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(selectedProblemWord.word)}>
@@ -479,7 +480,7 @@ const PronunciationResults = ({
                                         <div className="word-practice-summary-grid">
                                             <div className="word-practice-summary-item">
                                                 <span className="word-practice-summary-label">Issue</span>
-                                                <strong>{getWordStatusLabel(selectedProblemWord)}</strong>
+                                                <strong>{getWordStatusLabel(selectedDisplayedWord)}</strong>
                                             </div>
                                             <div className="word-practice-summary-item">
                                                 <span className="word-practice-summary-label">Syllables</span>

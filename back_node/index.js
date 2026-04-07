@@ -15,6 +15,7 @@ app.use(express.json()) // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })) // Parse URL-encoded bodies
 app.use('/uploads', express.static(path.join(__dirname, 'db/uploads'))); // Serve uploaded audio files
 router.post('/transcribe', whisperController.uploadMiddleware, whisperController.toText);
+router.get('/whisperx-health', whisperController.whisperxHealth);
 
 // Data Routes
 router.post('/save-words', dataController.saveWords);

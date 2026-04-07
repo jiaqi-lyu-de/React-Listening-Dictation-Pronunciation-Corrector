@@ -79,7 +79,7 @@ flowchart LR
 - `Speech`: Azure Cognitive Services Speech SDK
 - `Backend`: Node.js, Express
 - `Transcription`: whisper-node, optional whisperx
-- `Audio tooling`: ffmpeg, fluent-ffmpeg
+- `Audio tooling`: ffmpeg-static, fluent-ffmpeg
 - `Persistence`: local JSON files under `back_node/db`
 
 ## Project Structure
@@ -103,8 +103,7 @@ flowchart LR
 
 - [Node.js](https://nodejs.org/) `v18+`
 - an Azure Speech resource
-- `ffmpeg` available in your shell `PATH`
-- optional for `whisperx` mode: `python3` and `whisperx`
+- optional for `whisperx` mode: `python3`, a virtualenv, and the Python WhisperX service dependencies
 
 ### Environment Variables
 
@@ -120,6 +119,10 @@ Create `back_node/.env` from `back_node/.env.example`:
 
 ```env
 PORT=8888
+WHISPERX_SERVICE_URL=http://127.0.0.1:8008
+WHISPERX_MODEL=small
+WHISPERX_DEVICE=cpu
+WHISPERX_COMPUTE_TYPE=int8
 ```
 
 ### Install
@@ -129,6 +132,18 @@ npm install
 cd back_node && npm install && cd ..
 ```
 
+If you want to use `whisperx`, start the Python service separately:
+
+```bash
+cd back_node
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r python_whisperx/requirements.txt
+python3 python_whisperx/app.py
+```
+
+The Python WhisperX service sets `TORCH_FORCE_WEIGHTS_ONLY_LOAD=0` internally to stay compatible with newer PyTorch defaults.
+
 ### Run
 
 ```bash
@@ -137,6 +152,7 @@ npm run dev
 
 - frontend: `http://localhost:3000`
 - backend: `http://localhost:8888`
+- whisperx service: `http://127.0.0.1:8008`
 
 ## Demo Notes
 
@@ -178,7 +194,7 @@ If you are using this repository in interviews or GitHub portfolio reviews, the 
 - `语音评测`：Azure Speech SDK
 - `后端`：Node.js、Express
 - `转写`：whisper-node，可选 whisperx
-- `音频处理`：ffmpeg、fluent-ffmpeg
+- `音频处理`：ffmpeg-static、fluent-ffmpeg
 - `存储`：`back_node/db` 下的本地 JSON 文件
 
 ### 本地启动
@@ -187,8 +203,7 @@ If you are using this repository in interviews or GitHub portfolio reviews, the 
 
 - Node.js `v18+`
 - 可用的 Azure Speech 服务
-- 已安装并可从命令行访问的 `ffmpeg`
-- 若要使用 `whisperx` 模式，还需要 `python3` 与 `whisperx`
+- 若要使用 `whisperx` 模式，还需要 `python3`、虚拟环境和 Python WhisperX 服务依赖
 
 #### 环境变量
 
@@ -204,6 +219,10 @@ REACT_APP_AZURE_SPEECH_REGION=你的 Azure 区域
 
 ```env
 PORT=8888
+WHISPERX_SERVICE_URL=http://127.0.0.1:8008
+WHISPERX_MODEL=small
+WHISPERX_DEVICE=cpu
+WHISPERX_COMPUTE_TYPE=int8
 ```
 
 #### 安装与运行
@@ -214,7 +233,21 @@ cd back_node && npm install && cd ..
 npm run dev
 ```
 
-前端运行于 `http://localhost:3000`，后端运行于 `http://localhost:8888`。
+若要启用 `whisperx`，还需要单独启动 Python 服务：
+
+```bash
+cd back_node
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r python_whisperx/requirements.txt
+python3 python_whisperx/app.py
+```
+
+Python WhisperX 服务内部已设置 `TORCH_FORCE_WEIGHTS_ONLY_LOAD=0`，用于兼容较新的 PyTorch 默认加载行为。
+
+前端运行于 `http://localhost:3000`，Node 后端运行于 `http://localhost:8888`，WhisperX Python 服务运行于 `http://127.0.0.1:8008`。
+
+注意：WhisperX Python 服务读取的是 Node 后端转码后的本地绝对路径音频文件，因此必须和 Node 后端运行在同一台机器上。
 
 ### 用于作品集展示时，建议继续补充
 

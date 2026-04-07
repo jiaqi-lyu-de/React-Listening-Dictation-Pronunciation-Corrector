@@ -1,6 +1,7 @@
 # dependencies
 node_modules/
 /back_node/node_modules/
+/back_node/.venv/
 
 # testing
 /coverage

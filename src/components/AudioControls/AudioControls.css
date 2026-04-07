@@ -51,19 +51,23 @@
     justify-content: flex-start;
     gap: 1rem;
     padding: 1.5rem;
-    background: linear-gradient(135deg, rgba(18, 54, 41, 0.92) 0%, rgba(178, 91, 42, 0.92) 100%);
+    background: var(--accent-gradient);
     color: white;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-lg);
     cursor: pointer;
     font-size: 1.125rem;
     font-weight: 600;
     transition: all var(--transition-normal);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
 }
 
 .upload-label:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    background: var(--accent-gradient-strong);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg), 0 8px 24px var(--accent-glow-strong);
 }
 
 .upload-label:active {

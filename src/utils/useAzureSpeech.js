@@ -60,9 +60,14 @@ const useAzureSpeech = () => {
     speechConfig.speechRecognitionLanguage = 'en-US';
 
     const wordCount = referenceText.trim().split(/\s+/).length;
+    const isSingleWord = wordCount === 1;
     speechConfig.setProperty(
       SpeechSDK.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs,
-      wordCount === 1 ? '500' : '2000'
+      isSingleWord ? '1500' : '2000'
+    );
+    speechConfig.setProperty(
+      SpeechSDK.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs,
+      isSingleWord ? '5000' : '3500'
     );
 
     return speechConfig;
@@ -137,7 +142,7 @@ const useAzureSpeech = () => {
             if (speechResult.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
               resolve(buildAssessmentResult(speechResult));
             } else if (speechResult.reason === SpeechSDK.ResultReason.NoMatch) {
-              reject(new Error('No speech could be recognized. Please try again.'));
+              reject(new Error('No speech was detected. Speak a bit closer to the mic and try again.'));
             } else if (speechResult.reason === SpeechSDK.ResultReason.Canceled) {
               const details = SpeechSDK.CancellationDetails.fromResult(speechResult);
               reject(new Error(`Recognition canceled: ${details.errorDetails || details.reason}`));
@@ -233,7 +238,7 @@ const useAzureSpeech = () => {
       };
 
       recognizer.startContinuousRecognitionAsync(
-        () => {},
+        () => { },
         (err) => {
           setError(`Failed to start recording: ${err}`);
           cleanupRecognizer();
