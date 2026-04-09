@@ -185,24 +185,7 @@ function App() {
             </p>
           </div>
 
-          <div className="hero-stats">
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Current Mode</span>
-              <strong className="hero-stat-value">{activeMode?.desc}</strong>
-            </div>
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Practiced</span>
-              <strong className="hero-stat-value">{practicedSentences}/{totalSentences || '--'}</strong>
-            </div>
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Average Accuracy</span>
-              <strong className="hero-stat-value">{overallAccuracy !== null ? `${overallAccuracy}%` : '--'}</strong>
-            </div>
-            <div className="hero-stat-card">
-              <span className="hero-stat-label">Completion</span>
-              <strong className="hero-stat-value">{totalSentences > 0 ? `${completionRate}%` : '--'}</strong>
-            </div>
-          </div>
+
         </header>
 
         <div className="mode-toggle">
@@ -276,6 +259,7 @@ function App() {
                     <div className="dictation-results">
                       <PronunciationResults
                         pronunciationResult={pronunciationResult}
+                        referenceText={text?.transcript?.[number]?.speech}
                         modeLabel="Dictation Playback"
                         onProblemWordsCaptured={(problemWords) => captureProblemWords(problemWords, 'Dictation')}
                       />

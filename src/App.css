@@ -214,8 +214,7 @@ select {
     overflow: hidden;
 }
 
-.hero-copy,
-.hero-stats {
+.hero-copy {
     position: relative;
     z-index: 1;
 }
@@ -240,12 +239,6 @@ select {
     text-transform: uppercase;
 }
 
-.hero-stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    align-content: start;
-}
 
 .hero-stat-card {
     padding: 1.1rem 1.15rem;
@@ -587,7 +580,6 @@ select {
         align-items: start;
     }
 
-    .hero-stats,
     .empty-workspace {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -603,7 +595,6 @@ select {
         margin-top: 1rem;
     }
 
-    .hero-stats,
     .empty-workspace {
         grid-template-columns: 1fr;
     }

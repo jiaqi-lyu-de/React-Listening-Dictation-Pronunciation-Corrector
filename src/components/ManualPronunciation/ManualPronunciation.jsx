@@ -220,6 +220,7 @@ const ManualPronunciation = ({ onProblemWordsCaptured }) => {
 
             <PronunciationResults
                 pronunciationResult={pronunciationResult}
+                referenceText={selectedText || displayText}
                 title={`Pronunciation Assessment (${selectedText ? "Selection" : "Full Text"})`}
                 modeLabel="Sentence Reading"
                 onProblemWordsCaptured={onProblemWordsCaptured}

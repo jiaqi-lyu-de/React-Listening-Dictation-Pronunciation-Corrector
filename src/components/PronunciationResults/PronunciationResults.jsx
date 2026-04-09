@@ -6,6 +6,7 @@ import './PronunciationResults.css';
 
 const PronunciationResults = ({
     pronunciationResult,
+    referenceText = "", // The original text used for assessment
     title = "Pronunciation Assessment",
     modeLabel = "Reading",
     onProblemWordsCaptured,
@@ -88,7 +89,46 @@ const PronunciationResults = ({
         }, []),
         [allWords]
     );
-    const problemWords = problemWordIndices.map(index => ({ ...allWords[index], sourceIndex: index }));
+
+    const problemWords = useMemo(() => {
+        if (!allWords || allWords.length === 0) return [];
+
+        // Dedup by word text, keeping the one with the lowest score
+        const uniqueWordsMap = new Map();
+
+        problemWordIndices.forEach(index => {
+            const wordData = allWords[index];
+            if (!wordData?.word) return;
+
+            const key = wordData.word.toLowerCase().trim();
+            const existing = uniqueWordsMap.get(key);
+
+            if (!existing || wordData.accuracyScore < existing.accuracyScore) {
+                uniqueWordsMap.set(key, { ...wordData, sourceIndex: index });
+            }
+        });
+
+        return Array.from(uniqueWordsMap.values());
+    }, [allWords, problemWordIndices]);
+
+    const playbackWords = useMemo(() => {
+        if (!referenceText || !allWords || allWords.length === 0) return allWords;
+
+        // Split reference text into words to preserve punctuation and case
+        const refWords = referenceText.trim().split(/\s+/).filter(Boolean);
+
+        // If length matches, we use refWords for display text to ensure 
+        // it matches "Highlight Text to Assess" exactly.
+        if (refWords.length === allWords.length) {
+            return allWords.map((word, i) => ({
+                ...word,
+                word: refWords[i]
+            }));
+        }
+
+        return allWords;
+    }, [allWords, referenceText]);
+
     const selectedProblemWord = selectedProblemWordIndex !== null ? allWords[selectedProblemWordIndex] : null;
     const selectedPracticeResult = selectedProblemWordIndex !== null ? wordPracticeResults[selectedProblemWordIndex] : null;
     const selectedPracticeWord = selectedPracticeResult?.words?.[0] || null;
@@ -332,7 +372,7 @@ const PronunciationResults = ({
             <div className="word-assessment">
                 <h4 className="word-title">Reading Playback (Click to hear, Right-click to verify)</h4>
                 <div className="text-playback-area">
-                    {allWords.map((word, index) => (
+                    {playbackWords.map((word, index) => (
                         <span
                             key={index}
                             className={`text-word ${getWordClass(word.errorType, word.accuracyScore)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
