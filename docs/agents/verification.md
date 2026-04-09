@@ -25,6 +25,28 @@ If editing `src/App.css` or multiple component CSS files:
 2. verify narrow-screen layout
 3. verify mode toggle does not overflow
 4. verify top-of-page additions do not bury the practice area
+5. verify no obvious layout jump, jitter, or unnecessary animation side effects
+
+## Documentation Sync
+
+If behavior, boundaries, or workflow expectations changed:
+
+1. update the relevant `docs/agents/*.md` file
+2. update `README.md` or other linked docs if they reference the changed rule
+3. verify document references are still valid after renames or splits
+
+## Common Vibe Coding Mistakes To Avoid
+
+- deleting valid comments without confirming whether they still document unfinished or gated functionality
+- shipping the feature while ignoring the performance cost it introduces
+- allowing multi-round generated code to keep inconsistent naming or control flow
+- forgetting to update markdown docs and their references after structural changes
+- debugging only page code while ignoring config or toolchain issues such as bundler configuration
+- adding animation without a clear product reason
+- ignoring page instability such as jitter or layout shift
+- creating a new feature block instead of reusing an existing pattern
+- failing to unify styles and shared functions across multiple pages
+- adding too many defensive fallbacks so real frontend errors are hidden and debugging becomes slower
 
 ## Required Harness Iteration
 
