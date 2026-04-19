@@ -12,6 +12,9 @@ const PronunciationResults = ({
     onProblemWordsCaptured,
     isProblemOnly = false
 }) => {
+    const cleanWord = (w) => (w || '').replace(/[.,!?;:()""''，。！？、]/g, '').trim();
+    const normalize = (w) => cleanWord(w).toLowerCase();
+
     const { isProcessing: processingWord, assessPronunciation } = useAzureSpeech();
     const [recordingWordIndex, setRecordingWordIndex] = useState(null);
     const [wordPracticeResults, setWordPracticeResults] = useState({});
@@ -34,18 +37,22 @@ const PronunciationResults = ({
         if (errorType === 'None' && accuracyScore >= 80) return 'word-correct';
         if (errorType === 'Omission') return 'word-omission';
         if (errorType === 'Insertion') return 'word-insertion';
+        if (errorType === 'Repeated') return 'word-repeated';
         if (errorType === 'Mispronunciation' || accuracyScore < 60) return 'word-error';
         return 'word-warning';
     };
 
     const getWordStatusLabel = (word) => {
         if (!word) return 'Needs work';
-        if (word.errorType === 'Omission') return 'Omitted in reading';
-        if (word.errorType === 'Insertion') return 'Unexpected insertion';
+        if (word.errorType === 'Omission') return 'Omitted — not read';
+        if (word.errorType === 'Insertion') return 'Extra word — not in text';
+        if (word.errorType === 'Repeated') return 'Repeated reading';
         if (word.errorType === 'Mispronunciation') return 'Mispronounced';
         if (word.accuracyScore < 60) return 'Low accuracy';
         return 'Needs polish';
     };
+
+
 
     const speakWord = (word) => {
         if (!word) return;
@@ -80,56 +87,83 @@ const PronunciationResults = ({
     };
 
     const allWords = useMemo(() => pronunciationResult?.words || [], [pronunciationResult]);
-    const problemWordIndices = useMemo(
-        () => allWords.reduce((indices, word, index) => {
-            if (word.errorType !== 'None' || word.accuracyScore < 80) {
-                indices.push(index);
+
+    const playbackWords = useMemo(() => {
+        if (!referenceText || !allWords || allWords.length === 0) return allWords;
+        const refWords = referenceText.trim().split(/\s+/).filter(Boolean);
+        const result = [];
+        let refIdx = 0;
+        for (let i = 0; i < allWords.length; i++) {
+            const w = allWords[i];
+            if (w.errorType === 'Insertion') {
+                const prevRef = refIdx > 0 ? refWords[refIdx - 1] : null;
+                const nextRef = refIdx < refWords.length ? refWords[refIdx] : null;
+                const wNorm = normalize(w.word);
+                const isRepeat =
+                    (prevRef && normalize(prevRef) === wNorm) ||
+                    (nextRef && normalize(nextRef) === wNorm);
+                result.push({ ...w, errorType: isRepeat ? 'Repeated' : 'Insertion' });
+            } else {
+                const displayWord = refIdx < refWords.length ? refWords[refIdx] : w.word;
+                result.push({ ...w, word: displayWord });
+                refIdx++;
             }
+        }
+        while (refIdx < refWords.length) {
+            result.push({ word: refWords[refIdx], errorType: 'Omission', accuracyScore: 0 });
+            refIdx++;
+        }
+        return result;
+    }, [allWords, referenceText]);
+
+    // Split into lines matching the original reference text structure
+    const playbackLines = useMemo(() => {
+        if (!referenceText) return [playbackWords.map((w, i) => ({ ...w, playbackIdx: i }))];
+        const textLines = referenceText.split('\n');
+        const result = [];
+        let wordIdx = 0;
+        for (const line of textLines) {
+            const lineRefWords = line.trim().split(/\s+/).filter(Boolean);
+            if (lineRefWords.length === 0) { result.push(null); continue; }
+            const lineWords = [];
+            let refConsumed = 0;
+            while (wordIdx < playbackWords.length && refConsumed < lineRefWords.length) {
+                const w = playbackWords[wordIdx];
+                lineWords.push({ ...w, playbackIdx: wordIdx });
+                wordIdx++;
+                if (w.errorType !== 'Insertion' && w.errorType !== 'Repeated') refConsumed++;
+            }
+            result.push(lineWords);
+        }
+        return result;
+    }, [referenceText, playbackWords]);
+
+    // Rebase problem detection on playbackWords so Omissions are included
+    const problemWordIndices = useMemo(
+        () => playbackWords.reduce((indices, word, index) => {
+            if (word.errorType !== 'None' || word.accuracyScore < 80) indices.push(index);
             return indices;
         }, []),
-        [allWords]
+        [playbackWords]
     );
 
     const problemWords = useMemo(() => {
-        if (!allWords || allWords.length === 0) return [];
-
-        // Dedup by word text, keeping the one with the lowest score
+        if (!playbackWords || playbackWords.length === 0) return [];
         const uniqueWordsMap = new Map();
-
         problemWordIndices.forEach(index => {
-            const wordData = allWords[index];
+            const wordData = playbackWords[index];
             if (!wordData?.word) return;
-
-            const key = wordData.word.toLowerCase().trim();
+            const key = normalize(wordData.word);
             const existing = uniqueWordsMap.get(key);
-
+            // Keep entry with worst (lowest) accuracy score
             if (!existing || wordData.accuracyScore < existing.accuracyScore) {
                 uniqueWordsMap.set(key, { ...wordData, sourceIndex: index });
             }
         });
-
         return Array.from(uniqueWordsMap.values());
-    }, [allWords, problemWordIndices]);
+    }, [playbackWords, problemWordIndices]);
 
-    const playbackWords = useMemo(() => {
-        if (!referenceText || !allWords || allWords.length === 0) return allWords;
-
-        // Split reference text into words to preserve punctuation and case
-        const refWords = referenceText.trim().split(/\s+/).filter(Boolean);
-
-        // If length matches, we use refWords for display text to ensure 
-        // it matches "Highlight Text to Assess" exactly.
-        if (refWords.length === allWords.length) {
-            return allWords.map((word, i) => ({
-                ...word,
-                word: refWords[i]
-            }));
-        }
-
-        return allWords;
-    }, [allWords, referenceText]);
-
-    const selectedProblemWord = selectedProblemWordIndex !== null ? allWords[selectedProblemWordIndex] : null;
+    const selectedProblemWord = selectedProblemWordIndex !== null ? playbackWords[selectedProblemWordIndex] : null;
     const selectedPracticeResult = selectedProblemWordIndex !== null ? wordPracticeResults[selectedProblemWordIndex] : null;
     const selectedPracticeWord = selectedPracticeResult?.words?.[0] || null;
     const selectedDisplayedAccuracy = selectedPracticeResult
@@ -148,22 +182,21 @@ const PronunciationResults = ({
         if (!problemWordIndices || problemWordIndices.length === 0) return;
 
         const dateStr = new Date().toISOString().split('T')[0];
-
-        // Deduplicate per word (case-insensitive) within this assessment.
         const uniqueProblemWords = new Map();
         problemWordIndices.forEach((idx) => {
-            const w = allWords[idx];
+            const w = playbackWords[idx];
             if (!w?.word) return;
-            const key = w.word.toLowerCase().trim();
+            const key = normalize(w.word);
             if (!key) return;
             if (!uniqueProblemWords.has(key)) uniqueProblemWords.set(key, w);
         });
 
         uniqueProblemWords.forEach((w, key) => {
+            // Skip synthetic Omissions added by us (no audio data from Azure)
+            if (w.errorType === 'Omission' && !w.phonemes) return;
             const attemptKey = `${dateStr}|${key}`;
             if (attemptedProblemWordsRef.current.has(attemptKey)) return;
             attemptedProblemWordsRef.current.add(attemptKey);
-
             fetchAPI('record-attempt', 'POST', {
                 body: {
                     word: w.word,
@@ -177,20 +210,20 @@ const PronunciationResults = ({
                 console.error('Failed to record attempt:', e);
             });
         });
-    }, [pronunciationResult, problemWordIndices, allWords]);
+    }, [pronunciationResult, problemWordIndices, playbackWords]);
 
     useEffect(() => {
         if (!onProblemWordsCaptured) return;
         if (!problemWords || problemWords.length === 0) return;
         const snapshot = problemWords
-            .map(w => w.word?.toLowerCase().trim() || '')
+            .map(w => normalize(w.word))
             .sort()
             .join(',');
         if (!snapshot || snapshot === problemWordsSnapshotRef.current) return;
         problemWordsSnapshotRef.current = snapshot;
         onProblemWordsCaptured(
             problemWords.map((word) => ({
-                word: word.word,
+                word: cleanWord(word.word),
                 accuracy: Math.round(word.accuracyScore),
                 errorType: word.errorType,
                 phonemes: word.phonemes || [],
@@ -253,9 +286,9 @@ const PronunciationResults = ({
                                             className={`word-item ${getWordClass(currentErrorType, currentAccuracy)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
                                             title={`Accuracy: ${Math.round(currentAccuracy)}%`}
                                         >
-                                            {word.word}
+                                            {cleanWord(word.word)}
                                         </span>
-                                        <span className={`word-details-accuracy-badge ${getScoreClass(currentAccuracy)}`}>
+                                        <span className={`word-details-accuracy-badge ${practiceResult ? getScoreClass(currentAccuracy) : currentAccuracy >= 80 ? 'score-medium' : getScoreClass(currentAccuracy)}`}>
                                             {Math.round(currentAccuracy)}
                                         </span>
                                     </div>
@@ -270,7 +303,7 @@ const PronunciationResults = ({
                                 <div>
                                     <p className="word-practice-kicker">Focused practice</p>
                                     <div className="word-practice-title-row">
-                                        <h5 className="word-practice-title">{selectedProblemWord.word}</h5>
+                                        <h5 className="word-practice-title">{cleanWord(selectedProblemWord.word)}</h5>
                                         <span className={`word-practice-score ${getScoreClass(selectedDisplayedAccuracy)}`}>
                                             {Math.round(selectedDisplayedAccuracy)}%
                                         </span>
@@ -278,7 +311,7 @@ const PronunciationResults = ({
                                     <p className="word-practice-status">{getWordStatusLabel(selectedDisplayedWord)}</p>
                                 </div>
                                 <div className="word-practice-actions">
-                                    <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(selectedProblemWord.word)}>Listen</button>
+                                    <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => speakWord(cleanWord(selectedProblemWord.word))}>Listen</button>
                                     <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(-1)} disabled={!hasPrevProblemWord}>Prev</button>
                                     <button type="button" className="word-practice-action-btn ui-btn-secondary" onClick={() => handleSelectAdjacentProblemWord(1)} disabled={!hasNextProblemWord}>Next</button>
                                 </div>
@@ -291,7 +324,7 @@ const PronunciationResults = ({
                                         <button
                                             type="button"
                                             className={`word-practice-record-btn ${recordingWordIndex === selectedProblemWordIndex ? 'recording' : ''}`}
-                                            onClick={() => runWordAssessment(selectedProblemWord.word, selectedProblemWordIndex)}
+                                            onClick={() => runWordAssessment(cleanWord(selectedProblemWord.word), selectedProblemWordIndex)}
                                             disabled={processingWord}
                                         >
                                             <svg className="word-practice-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -372,17 +405,30 @@ const PronunciationResults = ({
             <div className="word-assessment">
                 <h4 className="word-title">Reading Playback (Click to hear, Right-click to verify)</h4>
                 <div className="text-playback-area">
-                    {playbackWords.map((word, index) => (
-                        <span
-                            key={index}
-                            className={`text-word ${getWordClass(word.errorType, word.accuracyScore)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
-                            title={`Accuracy: ${Math.round(word.accuracyScore)}% | Error: ${word.errorType}`}
-                            onClick={() => speakWord(word.word)}
-                            onContextMenu={(e) => handleWordRightClick(e, word.word, index)}
-                        >
-                            {word.word}{" "}
-                        </span>
-                    ))}
+                    {playbackLines.map((line, lineIdx) => {
+                        if (line === null) return <div key={`br-${lineIdx}`} className="playback-line-break" />;
+                        return (
+                            <div key={lineIdx} className="playback-line">
+                                {line.map((word) => {
+                                    const idx = word.playbackIdx;
+                                    return (
+                                        <span
+                                            key={idx}
+                                            className={`text-word ${getWordClass(word.errorType, word.accuracyScore)} ${recordingWordIndex === idx ? 'recording-word' : ''}`}
+                                            title={getWordStatusLabel(word)}
+                                            onClick={() => speakWord(word.word)}
+                                            onContextMenu={(e) => handleWordRightClick(e, word.word, idx)}
+                                        >
+                                            {cleanWord(word.word)}
+                                            {word.errorType !== 'None' && (
+                                                <span className={`text-word-badge text-word-badge--${word.errorType.toLowerCase()}`} />
+                                            )}
+                                        </span>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -422,9 +468,9 @@ const PronunciationResults = ({
                                                 className={`word-item ${getWordClass(currentErrorType, currentAccuracy)} ${recordingWordIndex === index ? 'recording-word' : ''}`}
                                                 title={`Accuracy: ${Math.round(currentAccuracy)}%`}
                                             >
-                                                {word.word}
+                                                {cleanWord(word.word)}
                                             </span>
-                                            <span className={`word-details-accuracy-badge ${getScoreClass(currentAccuracy)}`}>
+                                            <span className={`word-details-accuracy-badge ${practiceResult ? getScoreClass(currentAccuracy) : currentAccuracy >= 80 ? 'score-medium' : getScoreClass(currentAccuracy)}`}>
                                                 {Math.round(currentAccuracy)}
                                             </span>
                                         </div>
@@ -479,7 +525,7 @@ const PronunciationResults = ({
                                                 </svg>
                                             </button>
                                             <p className="word-practice-hint">
-                                                {recordingWordIndex === selectedProblemWordIndex ? `Recording: ${selectedProblemWord.word}` : `Read the word: ${selectedProblemWord.word}`}
+                                                {recordingWordIndex === selectedProblemWordIndex ? `Recording: ${cleanWord(selectedProblemWord.word)}` : `Read the word: ${cleanWord(selectedProblemWord.word)}`}
                                             </p>
                                         </div>
 

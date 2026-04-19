@@ -14,6 +14,9 @@ const WordReading = ({
     dictationHistoryWords = [],
     sentenceHistoryWords = []
 }) => {
+    const cleanWord = (w) => (w || '').replace(/[.,!?;:()""''，。！？、]/g, '').trim();
+    const normalize = (w) => cleanWord(w).toLowerCase();
+
     const [allWords, setAllWords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -139,7 +142,7 @@ const WordReading = ({
         const entries = new Map();
 
         allWords.forEach((entry) => {
-            const key = entry.word?.toLowerCase();
+            const key = normalize(entry.word);
             if (!key || entries.has(key)) return;
             entries.set(key, entry);
         });
@@ -153,7 +156,7 @@ const WordReading = ({
             accuracyScore: entry.accuracy ?? 0,
             errorType: (entry.accuracy ?? 0) < 80 ? 'Mispronunciation' : 'None',
             phonemes: entry.phonemes || [],
-            ...(dictionaryByWord.get(entry.word?.toLowerCase()) || {})
+            ...(dictionaryByWord.get(normalize(entry.word)) || {})
         }));
 
         return {
