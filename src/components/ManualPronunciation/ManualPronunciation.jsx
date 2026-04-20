@@ -149,7 +149,7 @@ const ManualPronunciation = ({ onProblemWordsCaptured }) => {
                 <div className="mp-section-head">
                     <div>
                         <h3 className="section-title">Enter Text to Practice</h3>
-                        <p className="mp-section-desc">粘贴任意文本，然后高亮单词、短语或整段做单独评测。</p>
+                        <p className="mp-section-desc">Paste any text, then highlight a word, phrase, or full passage for focused assessment.</p>
                     </div>
                     <div className="mp-status-chips">
                         <span className="mp-status-chip">{wordCount || 0} words</span>

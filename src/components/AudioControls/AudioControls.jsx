@@ -30,7 +30,7 @@ const AudioControls = ({
     }
   };
 
-  // 辅助函数：时间字符串转秒数
+  // Convert an hh:mm:ss timestamp string into seconds.
   const timeToSeconds = (timeStr) => {
     if (!timeStr || typeof timeStr !== 'string') return 0;
     const parts = timeStr.split(':');
@@ -41,7 +41,7 @@ const AudioControls = ({
     return (hours * 3600) + (minutes * 60) + seconds;
   };
 
-  // 核心功能：监听时间更新
+  // Keep the active sentence aligned with playback progress.
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
     if (!audio || !text?.transcript) return;
@@ -65,7 +65,7 @@ const AudioControls = ({
       if (currentLine?.end) {
         const endTime = timeToSeconds(currentLine.end);
 
-        // 如果当前播放时间超过了句子的结束时间
+        // Stop sentence playback at the current sentence boundary.
         if (audio.currentTime >= endTime) {
           audio.pause();
           audio.currentTime = endTime;
@@ -74,7 +74,7 @@ const AudioControls = ({
     }
   };
 
-  // 当切换句子序号时，跳转到开始时间并自动播放（可选）
+  // When the active sentence changes, keep playback anchored to its start time.
   useEffect(() => {
     const currentLine = text?.transcript?.[number];
     if (currentLine?.start && audioRef.current) {
@@ -89,7 +89,7 @@ const AudioControls = ({
     }
   }, [number, text]);
 
-  // 内存清理
+  // Revoke the last uploaded object URL on unmount.
   useEffect(() => {
     return () => {
       if (uploadedObjectUrlRef.current) {
@@ -201,12 +201,12 @@ const AudioControls = ({
     {
       value: 'whisper-node',
       title: 'whisper-node',
-      desc: '默认方案，处理更轻量，适合快速导入。',
+      desc: 'Default option with lighter processing for faster imports.',
     },
     {
       value: 'whisperx',
       title: 'whisperx',
-      desc: '分句更细，适合需要更精确句边界的练习。',
+      desc: 'Provides finer sentence segmentation for more precise boundaries.',
     },
   ];
 
@@ -215,9 +215,9 @@ const AudioControls = ({
       <div className="upload-section">
         <div className="upload-copy">
           <span className="section-kicker">Audio Setup</span>
-          <h2 className="upload-title">导入音频，立即进入句级训练</h2>
+          <h2 className="upload-title">Import audio and start sentence-level practice</h2>
           <p className="upload-subtitle">
-            你可以上传新的音频，或者从历史记录恢复完整的听写上下文与时间轴。
+            Upload a new audio file or restore a saved session with its dictation context and timeline.
           </p>
         </div>
 
@@ -229,7 +229,7 @@ const AudioControls = ({
                 <span className="upload-text">
                   {loading ? 'Processing...' : 'Choose Audio File'}
                 </span>
-                <span className="upload-hint">MP3, WAV, M4A 等常见音频格式</span>
+                <span className="upload-hint">Supports common formats such as MP3, WAV, and M4A</span>
               </span>
             </label>
             <input

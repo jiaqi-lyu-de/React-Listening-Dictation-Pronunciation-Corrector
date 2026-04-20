@@ -151,24 +151,24 @@ function App() {
   const modes = [
     {
       key: 'dictation',
-      label: '语音转复读',
+      label: 'Dictation',
       icon: '🎧',
       desc: 'Dictation Studio',
-      summary: '上传音频后按句精听、听写、跟读，实时查看差异和发音反馈。',
+      summary: 'Upload audio, practice sentence by sentence, and review dictation differences with pronunciation feedback.',
     },
     {
       key: 'sentence',
-      label: '句子阅读',
+      label: 'Sentence Reading',
       icon: '📖',
       desc: 'Sentence Reading',
-      summary: '粘贴任意长文本，选中句子或短语单独评测发音，并对问题词做集中补练。',
+      summary: 'Paste any text, assess selected words or phrases, and revisit weak words in focused reading practice.',
     },
     {
       key: 'word-reading',
-      label: '单词阅读',
+      label: 'Word Reading',
       icon: '📖',
       desc: 'Word Reading',
-      summary: '粘贴任意长文本，选中句子或短语单独评测发音，并对问题词做集中补练。',
+      summary: 'Review saved weak words from earlier sessions and reassess them in a dedicated practice view.',
     },
   ];
   const activeMode = modes.find((mode) => mode.key === appMode);
@@ -181,7 +181,7 @@ function App() {
             <span className="hero-eyebrow">AI Listening Lab</span>
             <h1 className="app-title">Listening, Dictation, and Pronunciation in one focused workspace.</h1>
             <p className="app-subtitle">
-              从导入音频到逐句纠错，再到问题词补练，把训练路径集中在一个页面里完成。
+              Move from audio import to sentence-level correction and weak-word review without leaving the same workspace.
             </p>
           </div>
 
@@ -277,18 +277,18 @@ function App() {
                 <section className="empty-workspace">
                   <div className="empty-workspace-card">
                     <span className="empty-step">01</span>
-                    <h3>导入一段音频</h3>
-                    <p>上传新的练习素材，或从历史记录恢复之前的训练会话。</p>
+                    <h3>Import an audio file</h3>
+                    <p>Upload a new practice source or restore a previous session from history.</p>
                   </div>
                   <div className="empty-workspace-card">
                     <span className="empty-step">02</span>
-                    <h3>逐句听写和跟读</h3>
-                    <p>用键盘快捷键快速切句，先听写，再录音做发音评估。</p>
+                    <h3>Practice sentence by sentence</h3>
+                    <p>Use keyboard shortcuts to move quickly through the audio, then record for pronunciation assessment.</p>
                   </div>
                   <div className="empty-workspace-card">
                     <span className="empty-step">03</span>
-                    <h3>复盘错误与生词</h3>
-                    <p>右侧历史和底部词汇侧栏会保留你需要反复回看的内容。</p>
+                    <h3>Review mistakes and weak words</h3>
+                    <p>The side history and word panel keep the items you need to revisit later.</p>
                   </div>
                 </section>
               )}

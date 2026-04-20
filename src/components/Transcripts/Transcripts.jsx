@@ -22,7 +22,7 @@ const Transcripts = ({ text, currentNumber, onSentenceClick, unlockedSentenceNum
       <div className="transcripts-header">
         <div>
           <h2 className="transcripts-title">Transcript</h2>
-          <p className="transcripts-subtitle">点击任一句跳转，当前句会自动跟随音频定位。</p>
+          <p className="transcripts-subtitle">Click any sentence to jump to it. The active line follows the audio automatically.</p>
         </div>
         <div className="transcripts-meta">
           <span>{text.length} sentences</span>
@@ -45,7 +45,7 @@ const Transcripts = ({ text, currentNumber, onSentenceClick, unlockedSentenceNum
                   {isUnlocked ? transcript.speech : (transcript.speech || 'Sentence hidden until answered')}
                 </span>
                 {!isUnlocked && transcript.speech && (
-                  <span className="transcript-lock-hint">完成该句听写后解锁原文</span>
+                  <span className="transcript-lock-hint">Unlock the reference after checking this sentence.</span>
                 )}
                 {(transcript.start || transcript.end) && (
                   <span className="transcript-time">

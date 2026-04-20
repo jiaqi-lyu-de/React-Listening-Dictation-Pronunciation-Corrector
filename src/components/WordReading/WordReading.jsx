@@ -6,8 +6,8 @@ import '../HistorySelector/HistorySelector.css';
 import './WordReading.css';
 
 const HISTORY_SOURCES = [
-    { key: 'Dictation', label: '听力部分' },
-    { key: 'Sentence Reading', label: '句子阅读' }
+    { key: 'Dictation', label: 'Dictation' },
+    { key: 'Sentence Reading', label: 'Sentence Reading' }
 ];
 
 const WordReading = ({
@@ -184,13 +184,13 @@ const WordReading = ({
     }, [selectedHistoryGroup]);
 
     const formatHistoryDate = useCallback((dateKey) => {
-        if (!dateKey) return '选择日期';
+        if (!dateKey) return 'Select date';
 
         const parsed = new Date(`${dateKey}T00:00:00`);
         if (Number.isNaN(parsed.getTime())) return dateKey;
 
-        return parsed.toLocaleDateString('zh-CN', {
-            month: 'long',
+        return parsed.toLocaleDateString('en-US', {
+            month: 'short',
             day: 'numeric'
         });
     }, []);
@@ -227,7 +227,7 @@ const WordReading = ({
                         className="history-btn wr-history-btn ui-btn-secondary"
                         onClick={() => setHistoryMenuOpen((prev) => !prev)}
                     >
-                        {selectedHistoryGroup ? `📜 ${formatHistoryDate(selectedHistoryGroup.dateKey)}` : '📭 暂无历史'}
+                        {selectedHistoryGroup ? `📜 ${formatHistoryDate(selectedHistoryGroup.dateKey)}` : '📭 No history yet'}
                     </button>
 
                     {historyMenuOpen && (
@@ -290,7 +290,7 @@ const WordReading = ({
                 />
             ) : (
                 <div className="wr-history-empty-state">
-                    当前来源下还没有历史错误单词，先回到听力部分或句子阅读完成一次评测。
+                    No saved weak words for this source yet. Complete an assessment in Dictation or Sentence Reading first.
                 </div>
             )}
         </div>

@@ -58,16 +58,16 @@ const SpeechAssessor = ({ referenceText, onAssessmentResult, onError }) => {
                 {isProcessing ? (
                     <>
                         <span className="spinner"></span>
-                        正在处理...
+                        Processing...
                     </>
                 ) : isRecording ? (
                     <>
                         <span className="stop-icon">■</span>
-                        结束录音
+                        Stop Recording
                     </>
                 ) : (
                     <>
-                        🎤 开始录音
+                        🎤 Start Recording
                     </>
                 )}
             </button>

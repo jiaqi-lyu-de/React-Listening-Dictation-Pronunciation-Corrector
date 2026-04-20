@@ -155,8 +155,10 @@ const DiffCom = ({
     if (!part.added && !part.removed) acc.correct += wordCount;
     return acc;
   }, { correct: 0, missed: 0, extra: 0 });
-  const referencePlaceholder = originalText
-    ? '完成当前句听写并点击 Check Answer 后，这里才会显示原句。'
+  const referenceStatusText = originalText
+    ? (isReferenceUnlocked
+      ? 'The reference is available in the transcript and in the comparison below after you check the answer.'
+      : 'The reference stays hidden until you check the current answer.')
     : 'Load audio to begin sentence-by-sentence dictation.';
 
   return (
@@ -164,13 +166,8 @@ const DiffCom = ({
       <div className={`reference-section ${isReferenceUnlocked ? 'unlocked' : 'locked'}`}>
         <div className="reference-header">
           <div>
-            <span className="input-title">Reference Sentence</span>
-            <p className={`reference-text ${isReferenceUnlocked ? '' : 'is-obscured'}`}>
-              {isReferenceUnlocked ? originalText : (originalText || referencePlaceholder)}
-            </p>
-            {!isReferenceUnlocked && originalText && (
-              <p className="reference-lock-hint">{referencePlaceholder}</p>
-            )}
+            <span className="input-title">Practice Controls</span>
+            <p className="reference-status-text">{referenceStatusText}</p>
           </div>
           <button className="reference-audio-btn ui-btn-ghost" onClick={onReplayAudio}>
             Replay Audio

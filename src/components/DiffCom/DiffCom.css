@@ -46,28 +46,16 @@
     align-items: flex-start;
 }
 
-.reference-text {
-    font-size: 1.12rem;
-    line-height: 1.75;
-    color: var(--text-primary);
-}
-
 .reference-section.locked {
     position: relative;
     overflow: hidden;
 }
 
-.reference-text.is-obscured {
-    filter: blur(10px);
-    user-select: none;
-    pointer-events: none;
-}
-
-.reference-lock-hint {
-    margin-top: 0.55rem;
+.reference-status-text {
+    max-width: 42rem;
     color: var(--text-tertiary);
-    font-size: 0.84rem;
-    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.6;
 }
 
 .reference-audio-btn {

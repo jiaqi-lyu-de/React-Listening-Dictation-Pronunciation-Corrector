@@ -50,3 +50,4 @@
 - Existing comments may describe unfinished, gated, or not-yet-released behavior, so preserve them unless the change proves they are invalid.
 - When adding important functions, feature boundaries, temporary constraints, or non-obvious logic, add or update comments in time instead of leaving the reasoning implicit.
 - Do not add noisy generated comments that simply restate obvious code.
+- Keep code comments and inline product copy in English. Do not mix Chinese and English within the same component or code path.
