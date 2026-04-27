@@ -32,9 +32,8 @@ It is designed as a local-first demo project for showcasing:
 - Unlock the original sentence only after answering
 - Inspect diff feedback, pronunciation results, and per-session history
 
-![Dictation workspace](docs/screenshots/dictation-workspace.png)
+![Dictation demo](docs/gifs/dictation.gif)
 
-![Dictation feedback](docs/screenshots/dictation-feedback.png)
 
 ### 2. Sentence Reading
 
@@ -42,9 +41,8 @@ It is designed as a local-first demo project for showcasing:
 - Returns word-level and phoneme-level scoring
 - Supports both full-sentence reading and focused single-word practice
 
-![Sentence reading workspace](docs/screenshots/sentence-reading-workspace.png)
+![Sentence reading demo](docs/gifs/sentence_reading.gif)
 
-![Sentence reading feedback](docs/screenshots/sentence-reading-feedback.png)
 
 ### 3. Word Review
 
@@ -52,7 +50,8 @@ It is designed as a local-first demo project for showcasing:
 - Stores review history by date
 - Lets users re-open historical weak-word sets for targeted repetition
 
-![Word review workspace](docs/screenshots/word-review-workspace.png)
+![Word review demo](docs/gifs/word_reading.gif)
+
 
 ## Architecture
 

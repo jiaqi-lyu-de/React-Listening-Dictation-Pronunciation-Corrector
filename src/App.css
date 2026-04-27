@@ -200,7 +200,7 @@ select {
 
 .app-header {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
+    /* grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr); */
     gap: 1.5rem;
     padding: 2rem;
     margin: 2rem 0 2rem;
@@ -268,9 +268,9 @@ select {
 .app-title {
     font-size: clamp(2rem, 4.2vw, 3.6rem);
     line-height: 1.04;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--accent-deep);
-    max-width: 14ch;
+    /* max-width: 14ch; */
     text-wrap: balance;
 }
 

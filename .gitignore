@@ -21,6 +21,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# local videos (do not commit)
+*.mov
+*.mp4
+*.mkv
+*.webm
+
 # Local data and uploads
 /back_node/db/uploads/*
 !/back_node/db/uploads/.gitkeep
